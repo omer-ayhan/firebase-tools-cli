@@ -1,8 +1,17 @@
-const fs = require("fs");
-const chalk = require("chalk");
-const admin = require("firebase-admin");
+import fs from "fs";
+import chalk from "chalk";
+import * as admin from "firebase-admin";
 
-async function importCollections(file, options) {
+type ImportCommandOptionsType = {
+  batchSize?: number;
+  exclude?: string[];
+  merge?: boolean;
+};
+
+export async function importCollections(
+  file: string,
+  options: ImportCommandOptionsType
+) {
   try {
     const db = admin.firestore();
     console.log(chalk.blue(`📥 Starting import from: ${file}\n`));
@@ -18,7 +27,9 @@ async function importCollections(file, options) {
     let totalImported = 0;
     const batchSize = options.batchSize || 500;
 
-    for (const [collectionName, documents] of Object.entries(importData)) {
+    for (const [collectionName, documents] of Object.entries(
+      importData as any
+    )) {
       // Skip collections if specified
       if (options.exclude && options.exclude.includes(collectionName)) {
         console.log(
@@ -45,7 +56,7 @@ async function importCollections(file, options) {
         let batch = db.batch(); // Create new batch
         let batchCount = 0;
 
-        for (const [docId, docData] of Object.entries(documents)) {
+        for (const [docId, docData] of Object.entries(documents as any)) {
           const docRef = db
             .collection(parentCollection)
             .doc(parentDoc)
@@ -53,9 +64,9 @@ async function importCollections(file, options) {
             .doc(docId);
 
           if (options.merge) {
-            batch.set(docRef, docData, { merge: true });
+            batch.set(docRef, docData as any, { merge: true });
           } else {
-            batch.set(docRef, docData);
+            batch.set(docRef, docData as any);
           }
 
           batchCount++;
@@ -86,13 +97,13 @@ async function importCollections(file, options) {
         let batch = db.batch(); // Create new batch
         let batchCount = 0;
 
-        for (const [docId, docData] of Object.entries(documents)) {
+        for (const [docId, docData] of Object.entries(documents as any)) {
           const docRef = db.collection(collectionName).doc(docId);
 
           if (options.merge) {
-            batch.set(docRef, docData, { merge: true });
+            batch.set(docRef, docData as any, { merge: true });
           } else {
-            batch.set(docRef, docData);
+            batch.set(docRef, docData as any);
           }
 
           batchCount++;
@@ -129,9 +140,9 @@ async function importCollections(file, options) {
       )
     );
   } catch (error) {
-    console.error(chalk.red("❌ Import failed:"), error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    console.error(chalk.red("❌ Import failed:"), errorMessage);
     throw error;
   }
 }
-
-module.exports = importCollections;

@@ -1,4 +1,5 @@
 import { ServiceAccount } from "firebase-admin";
+import * as admin from "firebase-admin";
 
 export interface Config {
   defaultProject?: string;
@@ -131,3 +132,8 @@ export interface OrderByClause {
   field: string;
   direction: "asc" | "desc";
 }
+
+export type QueryDocumentSnapshotType = admin.firestore.QueryDocumentSnapshot<
+  admin.firestore.DocumentData,
+  admin.firestore.DocumentData
+>;

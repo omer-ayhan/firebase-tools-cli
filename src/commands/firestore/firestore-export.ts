@@ -1,8 +1,24 @@
-const fs = require("fs");
-const chalk = require("chalk");
-const admin = require("firebase-admin");
+import fs from "fs";
+import path from "path";
+import chalk from "chalk";
+import * as admin from "firebase-admin";
+import { QueryDocumentSnapshotType } from "../../types";
 
-async function exportCollections(options) {
+type ExportCommandOptionsType = {
+  exclude?: string[];
+  noSubcollections?: boolean;
+  detailed?: boolean;
+  importable?: boolean;
+  output?: string;
+};
+
+type ImportData = {
+  [key: string]: {
+    [key: string]: any;
+  };
+};
+
+export async function exportCollections(options: ExportCommandOptionsType) {
   try {
     const db = admin.firestore();
     console.log(chalk.blue("🔍 Starting Firestore export...\n"));
@@ -12,8 +28,19 @@ async function exportCollections(options) {
       chalk.cyan(`📁 Found ${collections.length} top-level collections\n`)
     );
 
-    const allData = {};
-    const importData = {};
+    const allData: {
+      [key: string]: {
+        id: string;
+        data: any;
+        createTime: admin.firestore.Timestamp;
+        updateTime: admin.firestore.Timestamp;
+        error?: string;
+        subcollections?: {
+          [key: string]: any[];
+        };
+      }[];
+    } = {};
+    const importData: ImportData = {};
     let totalDocsRead = 0;
     let totalSubDocsRead = 0;
 
@@ -43,7 +70,7 @@ async function exportCollections(options) {
 
         // Create loading indicator
         let loadingDots = 0;
-        const loadingInterval = setInterval(() => {
+        let loadingInterval = setInterval(() => {
           const dots = ".".repeat((loadingDots % 3) + 1);
           process.stdout.write(
             `\r${chalk.gray(`       └── Processing${dots}   `)}`
@@ -52,7 +79,15 @@ async function exportCollections(options) {
         }, 300);
 
         for (const doc of snapshot.docs) {
-          const docData = {
+          const docData: {
+            id: string;
+            data: any;
+            createTime: admin.firestore.Timestamp;
+            updateTime: admin.firestore.Timestamp;
+            subcollections?: {
+              [key: string]: any[];
+            };
+          } = {
             id: doc.id,
             data: doc.data(),
             createTime: doc.createTime,
@@ -80,13 +115,13 @@ async function exportCollections(options) {
 
               for (const subcol of subcollections) {
                 const subSnapshot = await subcol.get();
-                const subDocs = [];
+                const subDocs: any[] = [];
 
                 // For importable format
                 const subCollectionPath = `${collectionName}__${doc.id}__${subcol.id}`;
                 importData[subCollectionPath] = {};
 
-                subSnapshot.forEach((subDoc) => {
+                subSnapshot.forEach((subDoc: QueryDocumentSnapshotType) => {
                   const subDocData = {
                     id: subDoc.id,
                     data: subDoc.data(),
@@ -144,11 +179,12 @@ async function exportCollections(options) {
           )
         );
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         console.error(
           chalk.red(`   ❌ Error reading collection ${collectionName}:`),
-          error.message
+          errorMessage
         );
-        allData[collectionName] = { error: error.message };
       }
     }
 
@@ -160,7 +196,7 @@ async function exportCollections(options) {
 
     // Create saving loading indicator
     let savingDots = 0;
-    const savingInterval = setInterval(() => {
+    let savingInterval = setInterval(() => {
       const dots = ".".repeat((savingDots % 3) + 1);
       process.stdout.write(`\r${chalk.gray(`   └── Writing files${dots}   `)}`);
       savingDots++;
@@ -250,7 +286,9 @@ async function exportCollections(options) {
 
     console.log(chalk.green("\n🎉 Export completed successfully!"));
   } catch (error) {
-    console.error(chalk.red("❌ Export failed:"), error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    console.error(chalk.red("❌ Export failed:"), errorMessage);
     throw error;
   }
 }

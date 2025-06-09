@@ -1,8 +1,9 @@
-const { Command } = require("commander");
-const admin = require("firebase-admin");
-const queryCollection = require("./firestore-query.js");
-const importCollections = require("./firestore-import.js");
-const listCollections = require("./firestore-list.js");
+import { Command } from "commander";
+import * as admin from "firebase-admin";
+import { listCollections } from "./firestore-list";
+import { queryCollection } from "./firestore-query";
+import { importCollections } from "./firestore-import";
+import { exportCollections } from "./firestore-export";
 
 const firestoreCommand = new Command()
   .name("firestore")
@@ -81,7 +82,7 @@ const exportCommand = firestoreCommand
     }
   });
 
-module.exports = {
+export default {
   queryCommand,
   importCommand,
   exportCommand,
