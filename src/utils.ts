@@ -41,19 +41,21 @@ async function promptDatabaseUrl() {
       type: 'input',
       name: 'databaseUrl',
       message: 'Enter Firebase Realtime Database URL:',
-      validate: (input) => {
-        console.log('input', input);
-        if (!input.trim()) {
-          return 'Please enter a valid database URL';
+      filter: (input) => {
+        const path = input.trim();
+
+        if (!path) {
+          throw new Error('Please enter a valid database URL');
         }
 
-        if (!validateDatabaseUrl(input.trim())) {
-          return 'Please enter a valid Firebase Realtime Database URL (e.g., https://your-project-default-rtdb.firebaseio.com/)';
+        if (!validateDatabaseUrl(path)) {
+          throw new Error(
+            'Please enter a valid Firebase Realtime Database URL (e.g., https://your-project-default-rtdb.firebaseio.com/)'
+          );
         }
 
-        return true;
+        return path.replace(/\/$/, '');
       },
-      filter: (input) => input.trim().replace(/\/$/, ''), // Remove trailing slash
     },
   ]);
 

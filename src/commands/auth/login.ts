@@ -301,24 +301,28 @@ async function promptServiceAccountFile() {
       type: 'input',
       name: 'serviceAccountPath',
       message: 'Enter path to service account JSON file:',
-      validate: (input) => {
-        if (!input.trim()) {
-          return 'Please enter a valid file path';
+      filter: (input) => {
+        const path = input.trim();
+
+        if (!path) {
+          throw new Error('Please enter a valid file path');
         }
-        if (!fs.existsSync(input.trim())) {
-          return `File not found: ${input.trim()}`;
+
+        if (!fs.existsSync(path)) {
+          throw new Error(`File not found: ${path}`);
         }
+
         try {
           const content = JSON.parse(fs.readFileSync(input.trim(), 'utf8'));
           if (!content.type || content.type !== 'service_account') {
-            return 'Invalid service account file format';
+            throw new Error('Invalid service account file format');
           }
-          return true;
         } catch (error) {
-          return 'Invalid JSON file';
+          throw new Error('Invalid JSON file');
         }
+
+        return path;
       },
-      filter: (input) => input.trim(),
     },
   ]);
 
