@@ -1,20 +1,13 @@
-const { Command } = require("commander");
-const chalk = require("chalk");
-const path = require("path");
-const inquirer = require("inquirer");
-const fs = require("fs");
-const {
-  loadCredentials,
-  loadConfig,
-  saveConfig,
-  promptAuthenticationMethod,
-  promptServiceAccountFile,
-} = require("./login.js");
-const { listUserProjects } = require("./projects.js");
 
-const CONFIG_DIR = path.join(require("os").homedir(), ".firestore-cli");
-const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
-const CREDENTIALS_FILE = path.join(CONFIG_DIR, "credentials.json");
+import { Command } from "commander";
+import chalk from "chalk";
+import path from "path";
+import inquirer from "inquirer";
+import fs from "fs";
+import { loadCredentials, loadConfig, saveConfig, promptAuthenticationMethod, promptServiceAccountFile, authenticateWithOAuth } from "./login";
+import { listUserProjects } from "./projects";
+import { CONFIG_FILE, CREDENTIALS_FILE } from "../../constants";
+
 
 const authCommand = new Command()
   .command("auth")
@@ -142,7 +135,9 @@ const loginCommand = authCommand
         );
       }
     } catch (error) {
-      console.error(chalk.red("❌ Authentication failed:"), error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      console.error(chalk.red("❌ Authentication failed:"), errorMessage);
       process.exit(1);
     }
   });
@@ -237,7 +232,9 @@ const resetCommand = authCommand
         );
       }
     } catch (error) {
-      console.error(chalk.red("❌ Reset failed:"), error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      console.error(chalk.red("❌ Reset failed:"), errorMessage);
       process.exit(1);
     }
   });
@@ -309,9 +306,11 @@ const projectsCommand = authCommand
       );
       console.log(chalk.gray("   • firestore-cli reset --config-only"));
     } catch (error) {
-      console.error(chalk.red("❌ Failed to fetch projects:"), error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      console.error(chalk.red("❌ Failed to fetch projects:"), errorMessage);
 
-      if (error.message.includes("auth")) {
+      if (errorMessage.includes("auth")) {
         console.log(chalk.yellow("💡 Try: firestore-cli login --force"));
       }
     }

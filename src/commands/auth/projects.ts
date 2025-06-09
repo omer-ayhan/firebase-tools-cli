@@ -1,8 +1,18 @@
-const chalk = require("chalk");
-const { OAuth2Client } = require("google-auth-library");
+// const chalk = require("chalk");
+// const { OAuth2Client } = require("google-auth-library");
 
+import chalk from "chalk";
+import { Credentials, OAuth2Client } from "google-auth-library";
+
+type ProjectType = {
+  projectId: string;
+  displayName: string;
+  state: string;
+  lifecycleState: string;
+  name: string;
+};
 // FIXED: Better project listing with proper API endpoint
-async function listUserProjects(credentials) {
+async function listUserProjects(credentials: Credentials) {
   try {
     const oauth2Client = new OAuth2Client();
     oauth2Client.setCredentials({
@@ -17,7 +27,9 @@ async function listUserProjects(credentials) {
     // FIXED: Use Firebase Management API instead of Cloud Resource Manager
     try {
       // First try Firebase Management API
-      const firebaseResponse = await oauth2Client.request({
+      const firebaseResponse = await oauth2Client.request<{
+        results: ProjectType[];
+      }>({
         url: "https://firebase.googleapis.com/v1beta1/projects",
         method: "GET",
       });
@@ -43,7 +55,9 @@ async function listUserProjects(credentials) {
     }
 
     // Fallback to Cloud Resource Manager API
-    const response = await oauth2Client.request({
+    const response = await oauth2Client.request<{
+      projects: ProjectType[];
+    }>({
       url: "https://cloudresourcemanager.googleapis.com/v1/projects",
       method: "GET",
     });
@@ -61,9 +75,11 @@ async function listUserProjects(credentials) {
 
     return [];
   } catch (error) {
-    console.warn(chalk.yellow("⚠️  Could not fetch projects:"), error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
-    if (error.message.includes("403")) {
+    console.warn(chalk.yellow("⚠️  Could not fetch projects:"), errorMessage);
+
+    if (errorMessage.includes("403")) {
       console.log(
         chalk.yellow(
           "💡 This might be a permissions issue. Make sure your Google account has access to Firebase/Cloud projects."
@@ -75,6 +91,6 @@ async function listUserProjects(credentials) {
   }
 }
 
-module.exports = {
+export {
   listUserProjects,
 };

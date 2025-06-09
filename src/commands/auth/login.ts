@@ -1,28 +1,21 @@
-const fs = require("fs");
-const path = require("path");
-const chalk = require("chalk");
-const inquirer = require("inquirer");
-const { OAuth2Client } = require("google-auth-library");
-const open = require("open");
-const express = require("express");
-const { listUserProjects } = require("./projects.js");
+import { CONFIG_DIR, CONFIG_FILE, CREDENTIALS_FILE, OAUTH_CONFIG } from "../../constants";
+import fs from "fs";
+import chalk from "chalk";
+import inquirer from "inquirer";
+import { Credentials, OAuth2Client } from "google-auth-library";
+import express from "express";
+import open from "open";
+import { listUserProjects } from "./projects";
 
-const CONFIG_DIR = path.join(require("os").homedir(), ".firestore-cli");
-const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
-const CREDENTIALS_FILE = path.join(CONFIG_DIR, "credentials.json");
-
-// OAuth2 configuration - FIXED SCOPES
-const OAUTH_CONFIG = {
-  clientId: "work-in-progress",
-  clientSecret: "work-in-progress",
-  redirectUri: "http://localhost:8080/oauth2callback",
-  scopes: [
-    "https://www.googleapis.com/auth/firebase",
-    "https://www.googleapis.com/auth/firebase.database",
-    "https://www.googleapis.com/auth/datastore",
-    "https://www.googleapis.com/auth/cloud-platform.read-only",
-  ],
+type ConfigType = {
+  authMethod: string;
+  serviceAccountPath?: string;
 };
+
+
+interface ErrorWithCode extends Error {
+  code?: string;
+}
 
 // Ensure config directory exists
 function ensureConfigDir() {
@@ -32,7 +25,7 @@ function ensureConfigDir() {
 }
 
 // Save configuration
-function saveConfig(config) {
+function saveConfig(config: ConfigType) {
   ensureConfigDir();
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
@@ -51,13 +44,13 @@ function loadConfig() {
 }
 
 // Save credentials
-function saveCredentials(credentials) {
+function saveCredentials(credentials: Credentials) {
   ensureConfigDir();
   fs.writeFileSync(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2));
 }
 
 // FIXED: Better OAuth2 authentication flow with proper error handling
-async function authenticateWithOAuth() {
+async function authenticateWithOAuth(): Promise<Credentials> {
   return new Promise((resolve, reject) => {
     const oauth2Client = new OAuth2Client(
       OAUTH_CONFIG.clientId,
@@ -132,7 +125,7 @@ async function authenticateWithOAuth() {
 
       try {
         // Exchange code for tokens
-        const { tokens } = await oauth2Client.getToken(code);
+        const { tokens } = await oauth2Client.getToken(code as string);
 
         // IMPROVED: Better token validation
         if (!tokens.access_token) {
@@ -167,10 +160,12 @@ async function authenticateWithOAuth() {
         server.close();
         resolve(credentials);
       } catch (err) {
-        console.error("Token exchange error:", err);
+        const errorMessage = err instanceof Error ? err.message : String(err);
+
+        console.error("Token exchange error:", errorMessage);
         res.send(`
             <h1>❌ Authentication Failed</h1>
-            <p><strong>Error:</strong> ${err.message}</p>
+            <p><strong>Error:</strong> ${errorMessage}</p>
             <p>Please check the console for more details.</p>
           `);
         server.close();
@@ -179,7 +174,7 @@ async function authenticateWithOAuth() {
     });
 
     // Handle server startup errors
-    server.on("error", (err) => {
+    server.on("error", (err: ErrorWithCode) => {
       if (err.code === "EADDRINUSE") {
         console.error(chalk.red("❌ Port 8080 is already in use"));
         console.log(
@@ -213,7 +208,7 @@ async function authenticateWithOAuth() {
 }
 
 // FIXED: Better token refresh logic
-async function refreshTokenIfNeeded(credentials) {
+async function refreshTokenIfNeeded(credentials: Credentials) {
   const oauth2Client = new OAuth2Client(
     OAUTH_CONFIG.clientId,
     OAUTH_CONFIG.clientSecret,
@@ -252,7 +247,9 @@ async function refreshTokenIfNeeded(credentials) {
       console.log(chalk.green("✅ Token refreshed successfully"));
       return updatedCredentials;
     } catch (error) {
-      console.warn(chalk.yellow("⚠️  Could not refresh token:"), error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      console.warn(chalk.yellow("⚠️  Could not refresh token:"), errorMessage);
       console.log(chalk.blue("Re-authentication required..."));
       throw error;
     }
@@ -334,7 +331,7 @@ function loadCredentials() {
   return null;
 }
 
-module.exports = {
+export {
   authenticateWithOAuth,
   refreshTokenIfNeeded,
   listUserProjects,
