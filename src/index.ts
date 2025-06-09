@@ -1,21 +1,3 @@
-#!/usr/bin/env node
-
-// const { Command } = require("commander");
-// const admin = require("firebase-admin");
-// const fs = require("fs");
-// const path = require("path");
-// const chalk = require("chalk");
-// const { OAuth2Client } = require("google-auth-library");
-// const express = require("express");
-// const open = require("open");
-// const inquirer = require("inquirer");
-// const packageJson = require("./package.json");
-// const firestoreCommand = require("./commands/firestore");
-// const rtdbCommand = require("./commands/rtdb");
-// const docsCommand = require("./commands/docs");
-// const remoteConfigCommand = require("./commands/remote-config");
-// const authCommand = require("./commands/auth");
-
 import { Command } from "commander";
 import admin from "firebase-admin";
 import fs from "fs";
@@ -31,6 +13,12 @@ import rtdbCommand from "./commands/rtdb";
 import docsCommand from "./commands/docs";
 import remoteConfigCommand from "./commands/remote-config";
 import authCommand from "./commands/auth";
+import {
+  CONFIG_DIR,
+  CONFIG_FILE,
+  CREDENTIALS_FILE,
+  OAUTH_CONFIG,
+} from "./constants";
 
 const PROGRAM_NAME = packageJson.name;
 const PROGRAM_DESCRIPTION = packageJson.description;
@@ -45,22 +33,6 @@ program
 
 // Global variables
 let db;
-const CONFIG_DIR = path.join(require("os").homedir(), ".firestore-cli");
-const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
-const CREDENTIALS_FILE = path.join(CONFIG_DIR, "credentials.json");
-
-// OAuth2 configuration - FIXED SCOPES
-const OAUTH_CONFIG = {
-  clientId: "work-in-progress",
-  clientSecret: "work-in-progress",
-  redirectUri: "http://localhost:8080/oauth2callback",
-  scopes: [
-    "https://www.googleapis.com/auth/firebase",
-    "https://www.googleapis.com/auth/firebase.database",
-    "https://www.googleapis.com/auth/datastore",
-    "https://www.googleapis.com/auth/cloud-platform.read-only",
-  ],
-};
 
 // Ensure config directory exists
 function ensureConfigDir() {
