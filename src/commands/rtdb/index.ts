@@ -9,8 +9,9 @@ import { listRealtimeDatabase } from './rtdb-list';
 
 async function rtdbCommandPreAction(thisCommand: Command) {
   const options = thisCommand.opts();
-  const isDatabaseValid = validateDatabaseUrl(options.databaseUrl);
-  console.log('rtdbCommandPreAction', options);
+  const isDatabaseValid = options.databaseUrl
+    ? validateDatabaseUrl(options.databaseUrl)
+    : false;
 
   if (!options.databaseUrl || !isDatabaseValid) {
     console.log(
