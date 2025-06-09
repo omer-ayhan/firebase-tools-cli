@@ -1,8 +1,24 @@
-const fs = require("fs");
-const chalk = require("chalk");
-const { determineValueType } = require("../../utils.js");
+import fs from "fs";
+import chalk from "chalk";
+import { determineValueType } from "../../utils";
 
-async function convertToRemoteConfig(inputFile, options) {
+type ConditionType = {
+  name: string;
+  expression: string;
+  tagColor: string;
+};
+
+type ConvertToRemoteConfigOptionsType = {
+  conditions?: ConditionType[];
+  versionNumber?: string;
+  userEmail?: string;
+  description?: string;
+  conditionalValues?: Record<string, string[]>;
+  output?: string;
+  addConditions?: boolean;
+};
+
+export async function convertToRemoteConfig(inputFile: string, options: ConvertToRemoteConfigOptionsType) {
   try {
     console.log(
       chalk.blue(`🔄 Converting JSON to Remote Config format: ${inputFile}\n`)
@@ -14,19 +30,21 @@ async function convertToRemoteConfig(inputFile, options) {
     }
 
     const rawData = fs.readFileSync(inputFile, "utf8");
-    let inputData;
+    let inputData: Record<string, any>;
 
     try {
       inputData = JSON.parse(rawData);
     } catch (error) {
-      console.error(chalk.red("❌ Invalid JSON file:"), error.message);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      console.error(chalk.red("❌ Invalid JSON file:"), errorMessage);
       process.exit(1);
     }
 
     // Create Remote Config structure
     const remoteConfig = {
       conditions: options.conditions || [],
-      parameters: {},
+      parameters: {} as Record<string, any>,
       version: {
         versionNumber: options.versionNumber || "1",
         updateTime: new Date().toISOString(),
@@ -48,8 +66,17 @@ async function convertToRemoteConfig(inputFile, options) {
         continue;
       }
 
-      const parameter = {
-        defaultValue: {},
+      const parameter: {
+        defaultValue: {
+          value: string;
+        };
+        valueType: string;
+        description?: string;
+        conditionalValues?: string[];
+      } = {
+        defaultValue: {
+          value: "",
+        },
         valueType: determineValueType(value),
       };
 
@@ -132,9 +159,9 @@ async function convertToRemoteConfig(inputFile, options) {
     );
     console.log(chalk.gray("   4. Test with your app before publishing"));
   } catch (error) {
-    console.error(chalk.red("❌ Conversion failed:"), error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    console.error(chalk.red("❌ Conversion failed:"), errorMessage);
     throw error;
   }
 }
-
-module.exports = convertToRemoteConfig;

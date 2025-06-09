@@ -1,5 +1,5 @@
-const { Command } = require("commander");
-const convertToRemoteConfig = require("./remote-config-convert.js");
+import { Command } from "commander";
+import { convertToRemoteConfig } from "./remote-config-convert";
 
 const remoteConfigCommand = new Command()
   .command("remote-config")
@@ -31,6 +31,6 @@ const convertCommand = remoteConfigCommand
     }
   });
 
-module.exports = {
+export default {
   convertCommand,
 };
