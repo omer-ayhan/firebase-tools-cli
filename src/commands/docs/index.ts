@@ -1,7 +1,7 @@
-const { Command } = require("commander");
-const fs = require("fs");
-const chalk = require("chalk");
-const documentation = require("../../docs.js");
+import { Command } from "commander";
+import fs from "fs";
+import chalk from "chalk";
+import { documentation } from "../../docs";
 
 const docsCommand = new Command()
   .command("docs")
@@ -26,12 +26,14 @@ const docsCommand = new Command()
         console.log(documentation);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
       console.error(
         chalk.red("❌ Failed to generate documentation:"),
-        error.message
+        errorMessage
       );
       process.exit(1);
     }
   });
 
-module.exports = docsCommand;
+export default docsCommand;
