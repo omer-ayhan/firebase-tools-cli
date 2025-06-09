@@ -316,7 +316,7 @@ const projectsCommand = authCommand
     }
   });
 
-module.exports = {
+export default {
   loginCommand,
   resetCommand,
   projectsCommand,
