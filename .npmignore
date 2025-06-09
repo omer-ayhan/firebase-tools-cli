@@ -1,0 +1,15 @@
+# Development files
+meta.json
+src/
+tsconfig.json
+esbuild.config.js
+
+# Test files
+test/
+tests/
+*.test.js
+*.test.ts
+
+# Development dependencies
+.eslintrc*
+.prettierrc* 

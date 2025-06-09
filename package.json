@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "files": [
     "dist/**/*",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "description": "CLI tool for Firebase to manage Firestore, Remote Config, and Realtime Database",
   "main": "dist/index.js",
@@ -11,7 +12,8 @@
     "firebase-tools": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc --noEmit ./index.ts && esbuild index.ts --bundle --platform=node --format=cjs --outfile=dist/index.js",
+    "build": "tsc --noEmit && node esbuild.config.js",
+    "build:analyze": "NODE_ENV=development npm run build",
     "start": "npm run build && node dist/index.js",
     "dev": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
