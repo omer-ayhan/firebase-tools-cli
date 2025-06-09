@@ -2,18 +2,20 @@
   "name": "firebase-tools",
   "version": "1.0.0",
   "files": [
-    "index.js",
-    "llm.txt",
+    "dist/**/*",
     "README.md"
   ],
   "description": "CLI tool for Firebase to manage Firestore, Remote Config, and Realtime Database",
-  "main": "index.js",
+  "main": "dist/index.js",
   "bin": {
-    "firebase-tools": "./index.js"
+    "firebase-tools": "./dist/index.js"
   },
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --noEmit ./index.ts && esbuild index.ts --bundle --platform=node --format=cjs --outfile=dist/index.js",
+    "start": "npm run build && node dist/index.js",
+    "dev": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "firestore",
@@ -27,13 +29,14 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "firebase-admin": "^12.0.0",
-    "commander": "^11.0.0",
     "chalk": "^4.1.2",
-    "google-auth-library": "^9.0.0",
-    "open": "^8.4.2",
+    "commander": "^11.0.0",
+    "esbuild": "^0.25.5",
     "express": "^4.18.2",
-    "inquirer": "^8.2.6"
+    "firebase-admin": "^12.0.0",
+    "google-auth-library": "^9.0.0",
+    "inquirer": "^8.2.6",
+    "open": "^8.4.2"
   },
   "engines": {
     "node": ">=14.0.0"
@@ -45,5 +48,11 @@
   "bugs": {
     "url": "https://github.com/yourusername/firestore-cli/issues"
   },
-  "homepage": "https://github.com/yourusername/firestore-cli#readme"
+  "homepage": "https://github.com/yourusername/firestore-cli#readme",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/inquirer": "^8.2.10",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.8.3"
+  }
 }
