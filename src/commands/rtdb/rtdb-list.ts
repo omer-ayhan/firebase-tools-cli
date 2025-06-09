@@ -1,9 +1,14 @@
-const chalk = require("chalk");
-const admin = require("firebase-admin");
-const fs = require("fs");
-const { countNodes } = require("../../utils.js");
+import chalk from "chalk";
+import * as admin from "firebase-admin";
+import fs from "fs";
+import { countNodes } from "../../utils";
 
-async function listRealtimeDatabase(options) {
+type ListRTDBOptionsType = {
+  json?: boolean;
+  output?: string;
+};
+
+export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
   try {
     console.log(chalk.blue("📋 Listing Realtime Database structure...\n"));
 
@@ -23,7 +28,15 @@ async function listRealtimeDatabase(options) {
     const results = [];
 
     for (const [key, value] of Object.entries(allData)) {
-      const nodeInfo = {
+      const nodeInfo: {
+        name: string;
+        type: string;
+        childCount?: number;
+        sampleKeys?: string[];
+        hasMoreKeys?: boolean;
+        value?: string;
+        truncated?: boolean;
+      } = {
         name: key,
         type:
           typeof value === "object" && value !== null ? "object" : typeof value,
@@ -120,9 +133,11 @@ async function listRealtimeDatabase(options) {
       );
     }
   } catch (error) {
-    console.error(chalk.red("❌ Failed to list database:"), error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    console.error(chalk.red("❌ Failed to list database:"), errorMessage);
 
-    if (error.message.includes("PERMISSION_DENIED")) {
+    if (errorMessage.includes("PERMISSION_DENIED")) {
       console.log(chalk.yellow("💡 Make sure:"));
       console.log(
         chalk.gray("   • Your account has Realtime Database read access")

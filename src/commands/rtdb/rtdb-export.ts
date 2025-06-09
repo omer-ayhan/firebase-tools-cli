@@ -1,10 +1,19 @@
-const chalk = require("chalk");
-const admin = require("firebase-admin");
-const fs = require("fs");
-const path = require("path");
-const { countNodes } = require("../../utils.js");
 
-async function exportRealtimeDatabase(options) {
+import chalk from "chalk";
+import * as admin from "firebase-admin";
+import fs from "fs";
+import path from "path";
+import { countNodes } from "../../utils";
+
+type ExportRTDBOptionsType = {
+  exclude?: string[];
+  subcollections?: boolean;
+  detailed?: boolean;
+  importable?: boolean;
+  output?: string;
+};
+
+export async function exportRealtimeDatabase(options: ExportRTDBOptionsType) {
   try {
     console.log(chalk.blue("🔍 Starting Realtime Database export...\n"));
 
@@ -38,7 +47,10 @@ async function exportRealtimeDatabase(options) {
     // Handle no-subcollections (flatten to top level only)
     if (options.subcollections === false) {
       console.log(chalk.yellow("📏 Limiting export to top-level data only"));
-      const topLevelData = {};
+      const topLevelData: {
+        [key: string]: string | unknown;
+      } = {};
+      
       for (const [key, value] of Object.entries(allData)) {
         // Only include primitive values or convert objects to string representation
         if (typeof value === "object" && value !== null) {
@@ -159,14 +171,16 @@ async function exportRealtimeDatabase(options) {
       chalk.green("\n🎉 Realtime Database export completed successfully!")
     );
   } catch (error) {
-    console.error(chalk.red("❌ RTDB Export failed:"), error.message);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
-    if (error.message.includes("PERMISSION_DENIED")) {
+    console.error(chalk.red("❌ RTDB Export failed:"), errorMessage);
+
+    if (errorMessage.includes("PERMISSION_DENIED")) {
       console.log(chalk.yellow("💡 Make sure:"));
       console.log(chalk.gray("   • Your account has Realtime Database access"));
       console.log(chalk.gray("   • The database exists and has data"));
       console.log(chalk.gray("   • Database rules allow read access"));
-    } else if (error.message.includes("Database URL")) {
+    } else if (errorMessage.includes("Database URL")) {
       console.log(chalk.yellow("💡 Database URL troubleshooting:"));
       console.log(chalk.gray("   • Use --database-url flag"));
       console.log(
@@ -182,5 +196,3 @@ async function exportRealtimeDatabase(options) {
     throw error;
   }
 }
-
-module.exports = exportRealtimeDatabase;

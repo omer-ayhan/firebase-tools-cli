@@ -1,6 +1,7 @@
-const { Command } = require("commander");
-const listRealtimeDatabase = require("./rtdb-list.js");
-const exportRealtimeDatabase = require("./rtdb-export.js");
+import { Command } from "commander";
+import * as admin from "firebase-admin";
+import { listRealtimeDatabase } from "./rtdb-list";
+import { exportRealtimeDatabase } from "./rtdb-export";
 
 const rtdbCommand = new Command()
   .name("rtdb")
@@ -47,7 +48,7 @@ Examples:
     }
   });
 
-module.exports = {
+export default {
   listCommand,
   exportCommand,
 };
