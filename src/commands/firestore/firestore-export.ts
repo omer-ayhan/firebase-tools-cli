@@ -1,8 +1,9 @@
-import fs from "fs";
-import path from "path";
-import chalk from "chalk";
-import * as admin from "firebase-admin";
-import { QueryDocumentSnapshotType } from "../../types";
+import chalk from 'chalk';
+import * as admin from 'firebase-admin';
+import fs from 'fs';
+import path from 'path';
+
+import { QueryDocumentSnapshotType } from '@/types';
 
 type ExportCommandOptionsType = {
   exclude?: string[];
@@ -21,7 +22,7 @@ type ImportData = {
 export async function exportCollections(options: ExportCommandOptionsType) {
   try {
     const db = admin.firestore();
-    console.log(chalk.blue("🔍 Starting Firestore export...\n"));
+    console.log(chalk.blue('🔍 Starting Firestore export...\n'));
 
     const collections = await db.listCollections();
     console.log(
@@ -71,7 +72,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
         // Create loading indicator
         let loadingDots = 0;
         let loadingInterval = setInterval(() => {
-          const dots = ".".repeat((loadingDots % 3) + 1);
+          const dots = '.'.repeat((loadingDots % 3) + 1);
           process.stdout.write(
             `\r${chalk.gray(`       └── Processing${dots}   `)}`
           );
@@ -106,7 +107,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
 
               // Clear loading line and show subcollection info
               clearInterval(loadingInterval);
-              process.stdout.write("\r" + " ".repeat(50) + "\r"); // Clear the line
+              process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
               console.log(
                 chalk.gray(
                   `       └── Document ${doc.id} has ${subcollections.length} subcollections`
@@ -146,7 +147,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
               // Restart loading indicator if there are more documents
               if (collectionDocsRead < snapshot.size) {
                 loadingInterval = setInterval(() => {
-                  const dots = ".".repeat((loadingDots % 3) + 1);
+                  const dots = '.'.repeat((loadingDots % 3) + 1);
                   process.stdout.write(
                     `\r${chalk.gray(`       └── Processing${dots}   `)}`
                   );
@@ -161,7 +162,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
 
         // Clear loading indicator
         clearInterval(loadingInterval);
-        process.stdout.write("\r" + " ".repeat(50) + "\r"); // Clear the line
+        process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
 
         allData[collectionName] = documents;
         totalDocsRead += collectionDocsRead;
@@ -171,7 +172,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
         const subCollectionText =
           collectionSubDocsRead > 0
             ? chalk.gray(` + ${collectionSubDocsRead} subdocuments`)
-            : "";
+            : '';
 
         console.log(
           chalk.green(
@@ -189,15 +190,15 @@ export async function exportCollections(options: ExportCommandOptionsType) {
     }
 
     // Generate file names
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const outputDir = options.output || "./";
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const outputDir = options.output || './';
 
-    console.log(chalk.blue("💾 Saving export files..."));
+    console.log(chalk.blue('💾 Saving export files...'));
 
     // Create saving loading indicator
     let savingDots = 0;
     let savingInterval = setInterval(() => {
-      const dots = ".".repeat((savingDots % 3) + 1);
+      const dots = '.'.repeat((savingDots % 3) + 1);
       process.stdout.write(`\r${chalk.gray(`   └── Writing files${dots}   `)}`);
       savingDots++;
     }, 200);
@@ -211,13 +212,13 @@ export async function exportCollections(options: ExportCommandOptionsType) {
       fs.writeFileSync(detailedFile, JSON.stringify(allData, null, 2));
 
       clearInterval(savingInterval);
-      process.stdout.write("\r" + " ".repeat(50) + "\r"); // Clear the line
+      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
       console.log(chalk.green(`📄 Detailed backup saved: ${detailedFile}`));
 
       // Restart saving indicator if we have more files to save
       if (options.importable !== false) {
         savingInterval = setInterval(() => {
-          const dots = ".".repeat((savingDots % 3) + 1);
+          const dots = '.'.repeat((savingDots % 3) + 1);
           process.stdout.write(
             `\r${chalk.gray(`   └── Writing files${dots}   `)}`
           );
@@ -235,12 +236,12 @@ export async function exportCollections(options: ExportCommandOptionsType) {
       fs.writeFileSync(importableFile, JSON.stringify(importData, null, 2));
 
       clearInterval(savingInterval);
-      process.stdout.write("\r" + " ".repeat(50) + "\r"); // Clear the line
+      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
       console.log(chalk.green(`📤 Importable backup saved: ${importableFile}`));
     }
 
     // Summary with detailed read counts
-    console.log(chalk.blue("\n📊 Export Summary:"));
+    console.log(chalk.blue('\n📊 Export Summary:'));
     console.log(
       chalk.gray(`   └── Collections processed: ${Object.keys(allData).length}`)
     );
@@ -284,11 +285,11 @@ export async function exportCollections(options: ExportCommandOptionsType) {
       );
     }
 
-    console.log(chalk.green("\n🎉 Export completed successfully!"));
+    console.log(chalk.green('\n🎉 Export completed successfully!'));
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    console.error(chalk.red("❌ Export failed:"), errorMessage);
+    console.error(chalk.red('❌ Export failed:'), errorMessage);
     throw error;
   }
 }

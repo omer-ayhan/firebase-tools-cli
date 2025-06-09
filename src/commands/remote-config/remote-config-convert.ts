@@ -1,6 +1,7 @@
-import fs from "fs";
-import chalk from "chalk";
-import { determineValueType } from "../../utils";
+import chalk from 'chalk';
+import fs from 'fs';
+
+import { determineValueType } from '@/utils';
 
 type ConditionType = {
   name: string;
@@ -18,7 +19,10 @@ type ConvertToRemoteConfigOptionsType = {
   addConditions?: boolean;
 };
 
-export async function convertToRemoteConfig(inputFile: string, options: ConvertToRemoteConfigOptionsType) {
+export async function convertToRemoteConfig(
+  inputFile: string,
+  options: ConvertToRemoteConfigOptionsType
+) {
   try {
     console.log(
       chalk.blue(`🔄 Converting JSON to Remote Config format: ${inputFile}\n`)
@@ -29,15 +33,16 @@ export async function convertToRemoteConfig(inputFile: string, options: ConvertT
       process.exit(1);
     }
 
-    const rawData = fs.readFileSync(inputFile, "utf8");
+    const rawData = fs.readFileSync(inputFile, 'utf8');
     let inputData: Record<string, any>;
 
     try {
       inputData = JSON.parse(rawData);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
-      console.error(chalk.red("❌ Invalid JSON file:"), errorMessage);
+      console.error(chalk.red('❌ Invalid JSON file:'), errorMessage);
       process.exit(1);
     }
 
@@ -46,23 +51,23 @@ export async function convertToRemoteConfig(inputFile: string, options: ConvertT
       conditions: options.conditions || [],
       parameters: {} as Record<string, any>,
       version: {
-        versionNumber: options.versionNumber || "1",
+        versionNumber: options.versionNumber || '1',
         updateTime: new Date().toISOString(),
         updateUser: {
-          email: options.userEmail || "firestore-cli@example.com",
+          email: options.userEmail || 'firestore-cli@example.com',
         },
-        updateOrigin: "CONSOLE",
-        updateType: "INCREMENTAL_UPDATE",
+        updateOrigin: 'CONSOLE',
+        updateType: 'INCREMENTAL_UPDATE',
       },
     };
 
     // Convert input data to parameters
-    console.log(chalk.blue("📝 Converting parameters..."));
+    console.log(chalk.blue('📝 Converting parameters...'));
     let parameterCount = 0;
 
     for (const [key, value] of Object.entries(inputData)) {
       // Skip metadata fields
-      if (key === "conditions" || key === "version") {
+      if (key === 'conditions' || key === 'version') {
         continue;
       }
 
@@ -75,24 +80,24 @@ export async function convertToRemoteConfig(inputFile: string, options: ConvertT
         conditionalValues?: string[];
       } = {
         defaultValue: {
-          value: "",
+          value: '',
         },
         valueType: determineValueType(value),
       };
 
       // Set the default value based on type
-      if (typeof value === "object" && value !== null) {
+      if (typeof value === 'object' && value !== null) {
         parameter.defaultValue.value = JSON.stringify(value);
-        parameter.valueType = "JSON";
-      } else if (typeof value === "boolean") {
+        parameter.valueType = 'JSON';
+      } else if (typeof value === 'boolean') {
         parameter.defaultValue.value = value.toString();
-        parameter.valueType = "BOOLEAN";
-      } else if (typeof value === "number") {
+        parameter.valueType = 'BOOLEAN';
+      } else if (typeof value === 'number') {
         parameter.defaultValue.value = value.toString();
-        parameter.valueType = "NUMBER";
+        parameter.valueType = 'NUMBER';
       } else {
         parameter.defaultValue.value = value.toString();
-        parameter.valueType = "STRING";
+        parameter.valueType = 'STRING';
       }
 
       // Add description if provided in options
@@ -115,14 +120,14 @@ export async function convertToRemoteConfig(inputFile: string, options: ConvertT
     if (options.addConditions) {
       remoteConfig.conditions = [
         {
-          name: "iOS",
+          name: 'iOS',
           expression: "app.id == 'your.ios.app.id'",
-          tagColor: "PINK",
+          tagColor: 'PINK',
         },
         {
-          name: "Android",
+          name: 'Android',
           expression: "app.id == 'your.android.app.id'",
-          tagColor: "GREEN",
+          tagColor: 'GREEN',
         },
       ];
       console.log(
@@ -133,7 +138,7 @@ export async function convertToRemoteConfig(inputFile: string, options: ConvertT
     }
 
     // Generate output filename
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const outputFile = options.output || `remote_config_${timestamp}.json`;
 
     // Save the converted file
@@ -151,17 +156,17 @@ export async function convertToRemoteConfig(inputFile: string, options: ConvertT
     console.log(chalk.gray(`   └── File size: ${fileSize} KB`));
 
     // Show usage instructions
-    console.log(chalk.blue("\n💡 Next steps:"));
-    console.log(chalk.gray("   1. Review the generated Remote Config file"));
-    console.log(chalk.gray("   2. Update app IDs in conditions if needed"));
+    console.log(chalk.blue('\n💡 Next steps:'));
+    console.log(chalk.gray('   1. Review the generated Remote Config file'));
+    console.log(chalk.gray('   2. Update app IDs in conditions if needed'));
     console.log(
-      chalk.gray("   3. Upload to Firebase Console or use Firebase CLI")
+      chalk.gray('   3. Upload to Firebase Console or use Firebase CLI')
     );
-    console.log(chalk.gray("   4. Test with your app before publishing"));
+    console.log(chalk.gray('   4. Test with your app before publishing'));
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
-    console.error(chalk.red("❌ Conversion failed:"), errorMessage);
+
+    console.error(chalk.red('❌ Conversion failed:'), errorMessage);
     throw error;
   }
 }

@@ -1,6 +1,6 @@
-import fs from "fs";
-import chalk from "chalk";
-import * as admin from "firebase-admin";
+import chalk from 'chalk';
+import * as admin from 'firebase-admin';
+import fs from 'fs';
 
 type ImportCommandOptionsType = {
   batchSize?: number;
@@ -21,7 +21,7 @@ export async function importCollections(
       process.exit(1);
     }
 
-    const rawData = fs.readFileSync(file, "utf8");
+    const rawData = fs.readFileSync(file, 'utf8');
     const importData = JSON.parse(rawData);
 
     let totalImported = 0;
@@ -41,8 +41,8 @@ export async function importCollections(
       console.log(chalk.blue(`📝 Importing collection: ${collectionName}`));
 
       // Handle subcollection naming convention
-      if (collectionName.includes("__")) {
-        const parts = collectionName.split("__");
+      if (collectionName.includes('__')) {
+        const parts = collectionName.split('__');
         const parentCollection = parts[0];
         const parentDoc = parts[1];
         const subCollection = parts[2];
@@ -142,7 +142,7 @@ export async function importCollections(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    console.error(chalk.red("❌ Import failed:"), errorMessage);
+    console.error(chalk.red('❌ Import failed:'), errorMessage);
     throw error;
   }
 }

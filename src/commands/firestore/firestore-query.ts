@@ -1,6 +1,6 @@
-import fs from "fs";
-import chalk from "chalk";
-import * as admin from "firebase-admin";
+import chalk from 'chalk';
+import * as admin from 'firebase-admin';
+import fs from 'fs';
 
 type QueryCommandOptionsType = {
   where?: string;
@@ -30,7 +30,7 @@ export async function queryCollection(
 
     // Apply where clause
     if (options.where) {
-      const [field, operator, value] = options.where.split(",");
+      const [field, operator, value] = options.where.split(',');
       const operatorType = operator.trim() as admin.firestore.WhereFilterOp;
       query = query.where(field.trim(), operatorType, value.trim());
       console.log(chalk.gray(`   └── Filter: ${field} ${operator} ${value}`));
@@ -44,12 +44,12 @@ export async function queryCollection(
 
     // Apply ordering
     if (options.orderBy) {
-      const [field, direction] = options.orderBy.split(",");
+      const [field, direction] = options.orderBy.split(',');
       const directionType =
         direction?.trim() as admin.firestore.OrderByDirection;
 
-      query = query.orderBy(field.trim(), directionType || "asc");
-      console.log(chalk.gray(`   └── Order: ${field} ${direction || "asc"}`));
+      query = query.orderBy(field.trim(), directionType || 'asc');
+      console.log(chalk.gray(`   └── Order: ${field} ${direction || 'asc'}`));
     }
 
     const snapshot = await query.get();
@@ -72,7 +72,7 @@ export async function queryCollection(
       if (!options.json) {
         console.log(chalk.white(`${results.length}. Document ID: ${doc.id}`));
         const fields = Object.keys(doc.data());
-        console.log(chalk.gray(`   Fields: ${fields.join(", ")}`));
+        console.log(chalk.gray(`   Fields: ${fields.join(', ')}`));
         console.log();
       }
     });
@@ -93,7 +93,7 @@ export async function queryCollection(
 
       if (options.output) {
         // Save to file
-        const outputFile = options.output.endsWith(".json")
+        const outputFile = options.output.endsWith('.json')
           ? options.output
           : `${options.output}/query_${collectionName}_${Date.now()}.json`;
 
@@ -107,7 +107,7 @@ export async function queryCollection(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    console.error(chalk.red("❌ Query failed:"), errorMessage);
+    console.error(chalk.red('❌ Query failed:'), errorMessage);
     throw error;
   }
 }

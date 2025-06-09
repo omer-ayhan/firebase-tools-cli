@@ -1,10 +1,10 @@
-import chalk from "chalk";
-import * as admin from "firebase-admin";
+import chalk from 'chalk';
+import * as admin from 'firebase-admin';
 
 export async function listCollections(): Promise<void> {
   try {
     const db = admin.firestore();
-    console.log(chalk.blue("📋 Listing all collections...\n"));
+    console.log(chalk.blue('📋 Listing all collections...\n'));
 
     const collections = await db.listCollections();
 
@@ -21,18 +21,18 @@ export async function listCollections(): Promise<void> {
         const fields = Object.keys(firstDoc.data());
         console.log(
           chalk.gray(
-            `   └── Sample fields: ${fields.slice(0, 5).join(", ")}${
-              fields.length > 5 ? "..." : ""
+            `   └── Sample fields: ${fields.slice(0, 5).join(', ')}${
+              fields.length > 5 ? '...' : ''
             }`
           )
         );
       }
-      console.log("\n");
+      console.log('\n');
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    console.error(chalk.red("❌ Failed to list collections:"), errorMessage);
+    console.error(chalk.red('❌ Failed to list collections:'), errorMessage);
     throw error;
   }
 }

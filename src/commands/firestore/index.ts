@@ -1,17 +1,18 @@
-import { Command } from "commander";
-import * as admin from "firebase-admin";
-import { listCollections } from "./firestore-list";
-import { queryCollection } from "./firestore-query";
-import { importCollections } from "./firestore-import";
-import { exportCollections } from "./firestore-export";
+import { Command } from 'commander';
+import * as admin from 'firebase-admin';
+
+import { exportCollections } from './firestore-export';
+import { importCollections } from './firestore-import';
+import { listCollections } from './firestore-list';
+import { queryCollection } from './firestore-query';
 
 const firestoreCommand = new Command()
-  .name("firestore")
-  .description("Firestore database operations");
+  .name('firestore')
+  .description('Firestore database operations');
 
 const listCommand = firestoreCommand
-  .command("firestore:list")
-  .description("List all collections and their basic info")
+  .command('firestore:list')
+  .description('List all collections and their basic info')
   .action(async () => {
     try {
       await listCollections();
@@ -23,20 +24,20 @@ const listCommand = firestoreCommand
   });
 
 const queryCommand = firestoreCommand
-  .command("firestore:query")
-  .description("Query a specific collection")
-  .argument("<collection>", "Collection name to query")
+  .command('firestore:query')
+  .description('Query a specific collection')
+  .argument('<collection>', 'Collection name to query')
   .option(
-    "-w, --where <field,operator,value>",
+    '-w, --where <field,operator,value>',
     'Where clause (e.g., "age,>=,18")'
   )
-  .option("-l, --limit <number>", "Limit number of results")
+  .option('-l, --limit <number>', 'Limit number of results')
   .option(
-    "-o, --order-by <field,direction>",
+    '-o, --order-by <field,direction>',
     'Order by field (e.g., "name,asc")'
   )
-  .option("--json", "Output results as JSON")
-  .option("--output <file>", "Save JSON output to file (use with --json)")
+  .option('--json', 'Output results as JSON')
+  .option('--output <file>', 'Save JSON output to file (use with --json)')
   .action(async (collection, options) => {
     try {
       await queryCollection(collection, options);
@@ -48,12 +49,12 @@ const queryCommand = firestoreCommand
   });
 
 const importCommand = firestoreCommand
-  .command("firestore:import")
-  .description("Import data to Firestore from JSON file")
-  .argument("<file>", "JSON file to import")
-  .option("-b, --batch-size <size>", "Batch size for imports", "500")
-  .option("-m, --merge", "Merge documents instead of overwriting")
-  .option("-e, --exclude <collections...>", "Exclude specific collections")
+  .command('firestore:import')
+  .description('Import data to Firestore from JSON file')
+  .argument('<file>', 'JSON file to import')
+  .option('-b, --batch-size <size>', 'Batch size for imports', '500')
+  .option('-m, --merge', 'Merge documents instead of overwriting')
+  .option('-e, --exclude <collections...>', 'Exclude specific collections')
   .action(async (file, options) => {
     try {
       await importCollections(file, options);
@@ -65,13 +66,13 @@ const importCommand = firestoreCommand
   });
 
 const exportCommand = firestoreCommand
-  .command("firestore:export")
-  .description("Export all collections from Firestore")
-  .option("-o, --output <dir>", "Output directory", "./")
-  .option("--no-detailed", "Skip detailed format export")
-  .option("--no-importable", "Skip importable format export")
-  .option("--no-subcollections", "Skip subcollections")
-  .option("-e, --exclude <collections...>", "Exclude specific collections")
+  .command('firestore:export')
+  .description('Export all collections from Firestore')
+  .option('-o, --output <dir>', 'Output directory', './')
+  .option('--no-detailed', 'Skip detailed format export')
+  .option('--no-importable', 'Skip importable format export')
+  .option('--no-subcollections', 'Skip subcollections')
+  .option('-e, --exclude <collections...>', 'Exclude specific collections')
   .action(async (options) => {
     try {
       await exportCollections(options);

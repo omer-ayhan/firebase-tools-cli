@@ -1,17 +1,18 @@
-import { Command } from "commander";
-import fs from "fs";
-import chalk from "chalk";
-import { documentation } from "../../docs";
+import chalk from 'chalk';
+import { Command } from 'commander';
+import fs from 'fs';
+
+import { documentation } from '@/docs';
 
 const docsCommand = new Command()
-  .command("docs")
-  .description("Show CLI documentation for LLMs and developers")
-  .option("--save <file>", "Save documentation to file")
+  .command('docs')
+  .description('Show CLI documentation for LLMs and developers')
+  .option('--save <file>', 'Save documentation to file')
   .action(async (options) => {
     try {
       if (options.save) {
         // Save to file
-        const outputFile = options.save.endsWith(".txt")
+        const outputFile = options.save.endsWith('.txt')
           ? options.save
           : `${options.save}.txt`;
 
@@ -26,10 +27,11 @@ const docsCommand = new Command()
         console.log(documentation);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       console.error(
-        chalk.red("❌ Failed to generate documentation:"),
+        chalk.red('❌ Failed to generate documentation:'),
         errorMessage
       );
       process.exit(1);
