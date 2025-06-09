@@ -6,15 +6,7 @@ import path from 'path';
 
 import { CONFIG_FILE, CREDENTIALS_FILE } from '@/constants';
 
-import {
-  authenticateWithOAuth,
-  loadConfig,
-  loadCredentials,
-  promptAuthenticationMethod,
-  promptServiceAccountFile,
-  saveConfig,
-} from './login';
-import { listUserProjects } from './projects';
+import { loadConfig, promptServiceAccountFile, saveConfig } from './login';
 
 const authCommand = new Command()
   .command('auth')
@@ -27,11 +19,17 @@ const loginCommand = authCommand
   .option('--method <type>', 'Authentication method: oauth or service-account')
   .action(async (options) => {
     try {
-      const existingCredentials = loadCredentials();
       const config = loadConfig();
 
-      if (existingCredentials && !options.force) {
-        console.log(chalk.green('✅ Already authenticated'));
+      // Check if already authenticated with service account
+      if (
+        config.serviceAccountPath &&
+        fs.existsSync(config.serviceAccountPath) &&
+        !options.force
+      ) {
+        console.log(
+          chalk.green('✅ Already authenticated with service account')
+        );
 
         if (config.defaultProject) {
           console.log(
@@ -45,102 +43,40 @@ const loginCommand = authCommand
           chalk.gray('   • Use "firestore-cli projects" to change project')
         );
         console.log(
-          chalk.gray('   • Use "firestore-cli logout" to clear credentials')
+          chalk.gray('   • Use "firestore-cli reset" to clear configuration')
         );
         return;
       }
 
       console.log(chalk.blue('🔐 Starting authentication process...\n'));
 
-      // Determine authentication method
-      let authMethod = options.method;
-      if (!authMethod || !['oauth', 'service-account'].includes(authMethod)) {
-        authMethod = await promptAuthenticationMethod();
-      }
+      // Only support service account authentication
+      console.log(chalk.blue('🔑 Service Account Authentication\n'));
+      const serviceAccountPath = await promptServiceAccountFile();
 
-      if (authMethod === 'service-account') {
-        // Service account authentication
-        console.log(chalk.blue('🔑 Service Account Authentication\n'));
-        const serviceAccountPath = await promptServiceAccountFile();
+      const serviceAccount = require(path.resolve(serviceAccountPath));
+      console.log(chalk.green('✅ Service account loaded successfully!'));
+      console.log(chalk.gray(`   └── Project: ${serviceAccount.project_id}`));
 
-        const serviceAccount = require(path.resolve(serviceAccountPath));
-        console.log(chalk.green('✅ Service account loaded successfully!'));
-        console.log(chalk.gray(`   └── Project: ${serviceAccount.project_id}`));
+      // Save service account info to config for future use
+      const newConfig = {
+        ...config,
+        serviceAccountPath: path.resolve(serviceAccountPath),
+        defaultProject: serviceAccount.project_id,
+      };
 
-        // Ask if user wants to set as default project
-        const { setDefault } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'setDefault',
-            message: 'Set this project as default?',
-            default: true,
-          },
-        ]);
+      saveConfig(newConfig);
+      console.log(chalk.green(`✅ Service account saved for future use`));
+      console.log(
+        chalk.green(`✅ Default project set to: ${serviceAccount.project_id}`)
+      );
 
-        if (setDefault) {
-          saveConfig({ ...config, defaultProject: serviceAccount.project_id });
-          console.log(
-            chalk.green(
-              `✅ Default project set to: ${serviceAccount.project_id}`
-            )
-          );
-        }
-
-        console.log(
-          chalk.green('\n🎉 Setup complete! You can now use all commands.')
-        );
-        console.log(
-          chalk.gray(
-            `💡 Use --service-account ${serviceAccountPath} flag or place the file in your project`
-          )
-        );
-      } else {
-        // OAuth authentication (existing flow)
-        const credentials = await authenticateWithOAuth();
-        console.log(chalk.green('✅ Authentication successful!\n'));
-
-        // Get and select project
-        console.log(chalk.blue('📋 Fetching your Google Cloud projects...'));
-        const projects = await listUserProjects(credentials);
-
-        if (projects.length === 0) {
-          console.log(chalk.yellow('⚠️  No accessible projects found'));
-          console.log(
-            chalk.gray('You can still use the CLI with --project flag')
-          );
-          return;
-        }
-
-        const choices = projects.map((p) => ({
-          name: `${p.name} (${p.projectId})`,
-          value: p.projectId,
-          short: p.projectId,
-        }));
-
-        const { selectedProject } = await inquirer.prompt([
-          {
-            type: 'list',
-            name: 'selectedProject',
-            message: 'Select default project:',
-            choices: [
-              ...choices,
-              { name: 'Skip (use --project flag)', value: null },
-            ],
-            pageSize: 10,
-          },
-        ]);
-
-        if (selectedProject) {
-          saveConfig({ ...config, defaultProject: selectedProject });
-          console.log(
-            chalk.green(`✅ Default project set to: ${selectedProject}`)
-          );
-        }
-
-        console.log(
-          chalk.green('\n🎉 Setup complete! You can now use all commands.')
-        );
-      }
+      console.log(
+        chalk.green('\n🎉 Setup complete! You can now use all commands.')
+      );
+      console.log(
+        chalk.gray('💡 No need to specify --service-account flag anymore')
+      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -158,15 +94,18 @@ const resetCommand = authCommand
   .action(async (options) => {
     try {
       const config = loadConfig();
-      const credentials = loadCredentials();
 
       // Show current state
       console.log(chalk.blue('📋 Current Configuration:'));
 
-      if (credentials) {
-        console.log(chalk.gray('   └── Credentials: ✅ Present'));
+      if (
+        config.serviceAccountPath &&
+        fs.existsSync(config.serviceAccountPath)
+      ) {
+        console.log(chalk.gray('   └── Service Account: ✅ Present'));
+        console.log(chalk.gray(`   └── Path: ${config.serviceAccountPath}`));
       } else {
-        console.log(chalk.gray('   └── Credentials: ❌ Not found'));
+        console.log(chalk.gray('   └── Service Account: ❌ Not found'));
       }
 
       if (config.defaultProject) {
@@ -255,7 +194,6 @@ const projectsCommand = authCommand
   .option('--clear-default', 'Clear the default project setting')
   .action(async (options, command) => {
     try {
-      const credentials = loadCredentials();
       const config = loadConfig();
 
       // Get parent command options (global options like --service-account)
@@ -289,10 +227,6 @@ const projectsCommand = authCommand
           const serviceAccount = require(path.resolve(
             parentOptions.serviceAccount
           ));
-          console.log(chalk.blue('🔑 Using service account authentication'));
-          console.log(
-            chalk.gray(`   └── Project: ${serviceAccount.project_id}`)
-          );
 
           // For service accounts, we can't list projects via API easily
           // So we'll show the project from the service account file
@@ -326,15 +260,7 @@ const projectsCommand = authCommand
         }
       }
 
-      if (!credentials) {
-        console.log(chalk.yellow('🔐 Authentication required'));
-        console.log(chalk.gray('Run: firestore-cli login'));
-        console.log(
-          chalk.gray('Or use: firestore-cli --service-account <path> projects')
-        );
-        return;
-      }
-
+      // Handle setting default project
       if (options.setDefault) {
         saveConfig({ ...config, defaultProject: options.setDefault });
         console.log(
@@ -343,35 +269,52 @@ const projectsCommand = authCommand
         return;
       }
 
-      console.log(chalk.blue('📋 Fetching your Google Cloud projects...\n'));
-      const projects = await listUserProjects(credentials);
+      // Check for saved service account from login
+      if (
+        config.serviceAccountPath &&
+        fs.existsSync(config.serviceAccountPath)
+      ) {
+        try {
+          const serviceAccount = require(path.resolve(
+            config.serviceAccountPath
+          ));
+          console.log(
+            chalk.blue('🔑 Using saved service account authentication')
+          );
+          console.log(chalk.cyan('Service Account Project:\n'));
+          console.log(chalk.white(`📁 ${serviceAccount.project_id}`));
+          console.log(chalk.gray(`   └── ID: ${serviceAccount.project_id}`));
+          console.log(chalk.gray(`   └── Type: Service Account`));
 
-      if (projects.length === 0) {
-        console.log(chalk.yellow('⚠️  No accessible projects found'));
-        return;
+          const isDefault = serviceAccount.project_id === config.defaultProject;
+          if (isDefault) {
+            console.log(chalk.green('   └── Status: ✓ (default)'));
+          }
+
+          console.log();
+          console.log(chalk.blue('💡 Commands:'));
+          console.log(
+            chalk.gray(
+              `   • firestore-cli projects --set-default ${serviceAccount.project_id}`
+            )
+          );
+          console.log(
+            chalk.gray('   • firestore-cli projects --clear-default')
+          );
+          console.log(chalk.gray('   • firestore-cli reset --config-only'));
+          return;
+        } catch (error) {
+          console.error(chalk.red('❌ Invalid saved service account file'));
+          console.log(chalk.yellow('💡 Try: firestore-cli login'));
+          return;
+        }
       }
 
-      console.log(chalk.cyan(`Found ${projects.length} projects:\n`));
-
-      projects.forEach((project) => {
-        const isDefault = project.projectId === config.defaultProject;
-        const marker = isDefault ? chalk.green('✓ (default)') : '';
-
-        console.log(chalk.white(`📁 ${project.name}`));
-        console.log(chalk.gray(`   └── ID: ${project.projectId} ${marker}`));
-        console.log(chalk.gray(`   └── State: ${project.lifecycleState}`));
-        console.log();
-      });
-
-      console.log(chalk.blue('💡 Commands:'));
+      console.log(chalk.yellow('🔐 No authentication found'));
+      console.log(chalk.gray('Run: firestore-cli login'));
       console.log(
-        chalk.gray('   • firestore-cli projects --set-default PROJECT_ID')
+        chalk.gray('Or use: firestore-cli --service-account <path> projects')
       );
-      console.log(chalk.gray('   • firestore-cli projects --clear-default'));
-      console.log(
-        chalk.gray('   • firestore-cli --project PROJECT_ID [command]')
-      );
-      console.log(chalk.gray('   • firestore-cli reset --config-only'));
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
