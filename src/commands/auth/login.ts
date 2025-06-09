@@ -1,17 +1,23 @@
-import { CONFIG_DIR, CONFIG_FILE, CREDENTIALS_FILE, OAUTH_CONFIG } from "../../constants";
-import fs from "fs";
-import chalk from "chalk";
-import inquirer from "inquirer";
-import { Credentials, OAuth2Client } from "google-auth-library";
-import express from "express";
-import open from "open";
-import { listUserProjects } from "./projects";
+import chalk from 'chalk';
+import express from 'express';
+import fs from 'fs';
+import { Credentials, OAuth2Client } from 'google-auth-library';
+import inquirer from 'inquirer';
+import open from 'open';
+
+import {
+  CONFIG_DIR,
+  CONFIG_FILE,
+  CREDENTIALS_FILE,
+  OAUTH_CONFIG,
+} from '@/constants';
+
+import { listUserProjects } from './projects';
 
 type ConfigType = {
   authMethod: string;
   serviceAccountPath?: string;
 };
-
 
 interface ErrorWithCode extends Error {
   code?: string;
@@ -34,9 +40,9 @@ function saveConfig(config: ConfigType) {
 function loadConfig() {
   if (fs.existsSync(CONFIG_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+      return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
     } catch (error) {
-      console.warn(chalk.yellow("⚠️  Could not load config file"));
+      console.warn(chalk.yellow('⚠️  Could not load config file'));
       return {};
     }
   }
@@ -60,28 +66,28 @@ async function authenticateWithOAuth(): Promise<Credentials> {
 
     // Generate the url that will be used for the consent dialog
     const authorizeUrl = oauth2Client.generateAuthUrl({
-      access_type: "offline",
+      access_type: 'offline',
       scope: OAUTH_CONFIG.scopes,
-      prompt: "consent",
+      prompt: 'consent',
       include_granted_scopes: true, // ADDED: Include previously granted scopes
     });
 
-    console.log(chalk.blue("🔐 Starting OAuth2 authentication...\n"));
-    console.log(chalk.gray("Opening browser for Google authentication..."));
+    console.log(chalk.blue('🔐 Starting OAuth2 authentication...\n'));
+    console.log(chalk.gray('Opening browser for Google authentication...'));
     console.log(
       chalk.yellow(
-        "Note: You may need to verify your app with Google if this is your first time."
+        'Note: You may need to verify your app with Google if this is your first time.'
       )
     );
 
     // Create temporary server to handle callback
     const app = express();
     const server = app.listen(8080, () => {
-      console.log(chalk.gray("Local server started on port 8080"));
+      console.log(chalk.gray('Local server started on port 8080'));
     });
 
     // IMPROVED: Better error handling in callback
-    app.get("/oauth2callback", async (req, res) => {
+    app.get('/oauth2callback', async (req, res) => {
       const { code, error, error_description } = req.query;
 
       if (error) {
@@ -100,14 +106,14 @@ async function authenticateWithOAuth(): Promise<Credentials> {
         }
 
         // Provide helpful error messages
-        if (error === "access_denied") {
-          console.log(chalk.yellow("\n💡 Troubleshooting:"));
+        if (error === 'access_denied') {
+          console.log(chalk.yellow('\n💡 Troubleshooting:'));
           console.log(
-            chalk.gray("   • Make sure you granted all required permissions")
+            chalk.gray('   • Make sure you granted all required permissions')
           );
           console.log(
             chalk.gray(
-              "   • Check if your Google account has access to Firebase projects"
+              '   • Check if your Google account has access to Firebase projects'
             )
           );
         }
@@ -119,7 +125,7 @@ async function authenticateWithOAuth(): Promise<Credentials> {
       if (!code) {
         res.send(`<h1>❌ No authorization code received</h1>`);
         server.close();
-        reject(new Error("No authorization code received"));
+        reject(new Error('No authorization code received'));
         return;
       }
 
@@ -129,16 +135,16 @@ async function authenticateWithOAuth(): Promise<Credentials> {
 
         // IMPROVED: Better token validation
         if (!tokens.access_token) {
-          throw new Error("No access token received");
+          throw new Error('No access token received');
         }
 
         // Save credentials with better structure
         const credentials = {
-          type: "oauth2",
+          type: 'oauth2',
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
           expiry_date: tokens.expiry_date,
-          token_type: tokens.token_type || "Bearer",
+          token_type: tokens.token_type || 'Bearer',
           scope: tokens.scope,
           created_at: Date.now(),
         };
@@ -162,7 +168,7 @@ async function authenticateWithOAuth(): Promise<Credentials> {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
 
-        console.error("Token exchange error:", errorMessage);
+        console.error('Token exchange error:', errorMessage);
         res.send(`
             <h1>❌ Authentication Failed</h1>
             <p><strong>Error:</strong> ${errorMessage}</p>
@@ -174,16 +180,16 @@ async function authenticateWithOAuth(): Promise<Credentials> {
     });
 
     // Handle server startup errors
-    server.on("error", (err: ErrorWithCode) => {
-      if (err.code === "EADDRINUSE") {
-        console.error(chalk.red("❌ Port 8080 is already in use"));
+    server.on('error', (err: ErrorWithCode) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(chalk.red('❌ Port 8080 is already in use'));
         console.log(
           chalk.yellow(
-            "Please close any applications using port 8080 and try again"
+            'Please close any applications using port 8080 and try again'
           )
         );
       } else {
-        console.error(chalk.red("❌ Server error:"), err.message);
+        console.error(chalk.red('❌ Server error:'), err.message);
       }
       reject(err);
     });
@@ -191,17 +197,17 @@ async function authenticateWithOAuth(): Promise<Credentials> {
     // Add timeout for the authentication process
     const timeout = setTimeout(() => {
       server.close();
-      reject(new Error("Authentication timeout - please try again"));
+      reject(new Error('Authentication timeout - please try again'));
     }, 300000); // 5 minutes timeout
 
-    server.on("close", () => {
+    server.on('close', () => {
       clearTimeout(timeout);
     });
 
     // Open browser
     open(authorizeUrl).catch(() => {
-      console.log(chalk.yellow("\n⚠️  Could not open browser automatically"));
-      console.log(chalk.blue("Please visit this URL to authenticate:"));
+      console.log(chalk.yellow('\n⚠️  Could not open browser automatically'));
+      console.log(chalk.blue('Please visit this URL to authenticate:'));
       console.log(chalk.cyan(authorizeUrl));
     });
   });
@@ -228,7 +234,7 @@ async function refreshTokenIfNeeded(credentials: Credentials) {
     Date.now() + expiryBuffer >= credentials.expiry_date;
 
   if (isExpired && credentials.refresh_token) {
-    console.log(chalk.blue("🔄 Refreshing expired token..."));
+    console.log(chalk.blue('🔄 Refreshing expired token...'));
 
     try {
       const { credentials: newCredentials } =
@@ -244,13 +250,14 @@ async function refreshTokenIfNeeded(credentials: Credentials) {
       };
 
       saveCredentials(updatedCredentials);
-      console.log(chalk.green("✅ Token refreshed successfully"));
+      console.log(chalk.green('✅ Token refreshed successfully'));
       return updatedCredentials;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
-      console.warn(chalk.yellow("⚠️  Could not refresh token:"), errorMessage);
-      console.log(chalk.blue("Re-authentication required..."));
+      console.warn(chalk.yellow('⚠️  Could not refresh token:'), errorMessage);
+      console.log(chalk.blue('Re-authentication required...'));
       throw error;
     }
   }
@@ -262,25 +269,25 @@ async function refreshTokenIfNeeded(credentials: Credentials) {
 async function promptAuthenticationMethod() {
   const { authMethod } = await inquirer.prompt([
     {
-      type: "list",
-      name: "authMethod",
-      message: "Choose authentication method:",
+      type: 'list',
+      name: 'authMethod',
+      message: 'Choose authentication method:',
       choices: [
         {
           name: chalk.dim(
-            "🔐 OAuth (Google Account) - Interactive browser authentication"
+            '🔐 OAuth (Google Account) - Interactive browser authentication'
           ),
-          value: "oauth",
-          short: "OAuth",
-          disabled: chalk.dim("Work in Progress"),
+          value: 'oauth',
+          short: 'OAuth',
+          disabled: chalk.dim('Work in Progress'),
         },
         {
-          name: "🔑 Service Account - JSON key file authentication",
-          value: "service-account",
-          short: "Service Account",
+          name: '🔑 Service Account - JSON key file authentication',
+          value: 'service-account',
+          short: 'Service Account',
         },
       ],
-      default: "oauth",
+      default: 'oauth',
     },
   ]);
 
@@ -291,24 +298,24 @@ async function promptAuthenticationMethod() {
 async function promptServiceAccountFile() {
   const { serviceAccountPath } = await inquirer.prompt([
     {
-      type: "input",
-      name: "serviceAccountPath",
-      message: "Enter path to service account JSON file:",
+      type: 'input',
+      name: 'serviceAccountPath',
+      message: 'Enter path to service account JSON file:',
       validate: (input) => {
         if (!input.trim()) {
-          return "Please enter a valid file path";
+          return 'Please enter a valid file path';
         }
         if (!fs.existsSync(input.trim())) {
           return `File not found: ${input.trim()}`;
         }
         try {
-          const content = JSON.parse(fs.readFileSync(input.trim(), "utf8"));
-          if (!content.type || content.type !== "service_account") {
-            return "Invalid service account file format";
+          const content = JSON.parse(fs.readFileSync(input.trim(), 'utf8'));
+          if (!content.type || content.type !== 'service_account') {
+            return 'Invalid service account file format';
           }
           return true;
         } catch (error) {
-          return "Invalid JSON file";
+          return 'Invalid JSON file';
         }
       },
       filter: (input) => input.trim(),
@@ -322,9 +329,9 @@ async function promptServiceAccountFile() {
 function loadCredentials() {
   if (fs.existsSync(CREDENTIALS_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(CREDENTIALS_FILE, "utf8"));
+      return JSON.parse(fs.readFileSync(CREDENTIALS_FILE, 'utf8'));
     } catch (error) {
-      console.warn(chalk.yellow("⚠️  Could not load credentials file"));
+      console.warn(chalk.yellow('⚠️  Could not load credentials file'));
       return null;
     }
   }

@@ -1,8 +1,5 @@
-// const chalk = require("chalk");
-// const { OAuth2Client } = require("google-auth-library");
-
-import chalk from "chalk";
-import { Credentials, OAuth2Client } from "google-auth-library";
+import chalk from 'chalk';
+import { Credentials, OAuth2Client } from 'google-auth-library';
 
 type ProjectType = {
   projectId: string;
@@ -21,7 +18,7 @@ async function listUserProjects(credentials: Credentials) {
     });
 
     console.log(
-      chalk.gray("Fetching projects from Firebase Management API...")
+      chalk.gray('Fetching projects from Firebase Management API...')
     );
 
     // FIXED: Use Firebase Management API instead of Cloud Resource Manager
@@ -30,8 +27,8 @@ async function listUserProjects(credentials: Credentials) {
       const firebaseResponse = await oauth2Client.request<{
         results: ProjectType[];
       }>({
-        url: "https://firebase.googleapis.com/v1beta1/projects",
-        method: "GET",
+        url: 'https://firebase.googleapis.com/v1beta1/projects',
+        method: 'GET',
       });
 
       if (firebaseResponse.data && firebaseResponse.data.results) {
@@ -43,13 +40,13 @@ async function listUserProjects(credentials: Credentials) {
         return firebaseResponse.data.results.map((project) => ({
           projectId: project.projectId,
           name: project.displayName || project.projectId,
-          lifecycleState: project.state || "ACTIVE",
+          lifecycleState: project.state || 'ACTIVE',
         }));
       }
     } catch (firebaseError) {
       console.log(
         chalk.yellow(
-          "⚠️  Firebase Management API not accessible, trying Cloud Resource Manager..."
+          '⚠️  Firebase Management API not accessible, trying Cloud Resource Manager...'
         )
       );
     }
@@ -58,8 +55,8 @@ async function listUserProjects(credentials: Credentials) {
     const response = await oauth2Client.request<{
       projects: ProjectType[];
     }>({
-      url: "https://cloudresourcemanager.googleapis.com/v1/projects",
-      method: "GET",
+      url: 'https://cloudresourcemanager.googleapis.com/v1/projects',
+      method: 'GET',
     });
 
     if (response.data && response.data.projects) {
@@ -69,7 +66,7 @@ async function listUserProjects(credentials: Credentials) {
         )
       );
       return response.data.projects.filter(
-        (project) => project.lifecycleState === "ACTIVE"
+        (project) => project.lifecycleState === 'ACTIVE'
       );
     }
 
@@ -77,12 +74,12 @@ async function listUserProjects(credentials: Credentials) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    console.warn(chalk.yellow("⚠️  Could not fetch projects:"), errorMessage);
+    console.warn(chalk.yellow('⚠️  Could not fetch projects:'), errorMessage);
 
-    if (errorMessage.includes("403")) {
+    if (errorMessage.includes('403')) {
       console.log(
         chalk.yellow(
-          "💡 This might be a permissions issue. Make sure your Google account has access to Firebase/Cloud projects."
+          '💡 This might be a permissions issue. Make sure your Google account has access to Firebase/Cloud projects.'
         )
       );
     }
@@ -91,6 +88,4 @@ async function listUserProjects(credentials: Credentials) {
   }
 }
 
-export {
-  listUserProjects,
-};
+export { listUserProjects };
