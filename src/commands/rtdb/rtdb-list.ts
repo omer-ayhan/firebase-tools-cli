@@ -1,7 +1,8 @@
-import chalk from "chalk";
-import * as admin from "firebase-admin";
-import fs from "fs";
-import { countNodes } from "../../utils";
+import chalk from 'chalk';
+import * as admin from 'firebase-admin';
+import fs from 'fs';
+
+import { countNodes } from '@/utils';
 
 type ListRTDBOptionsType = {
   json?: boolean;
@@ -10,17 +11,18 @@ type ListRTDBOptionsType = {
 
 export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
   try {
-    console.log(chalk.blue("📋 Listing Realtime Database structure...\n"));
+    console.log(chalk.blue('📋 Listing Realtime Database structure...\n'));
 
+    const rtdbApp = admin.app('rtdb-app');
     // Get the database reference
-    const rtdb = admin.database();
+    const rtdb = rtdbApp.database();
 
     // Get the root reference and fetch all data
-    const snapshot = await rtdb.ref("/").once("value");
+    const snapshot = await rtdb.ref('/').once('value');
     const allData = snapshot.val();
 
     if (!allData) {
-      console.log(chalk.yellow("⚠️  No data found in Realtime Database"));
+      console.log(chalk.yellow('⚠️  No data found in Realtime Database'));
       return;
     }
 
@@ -39,10 +41,10 @@ export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
       } = {
         name: key,
         type:
-          typeof value === "object" && value !== null ? "object" : typeof value,
+          typeof value === 'object' && value !== null ? 'object' : typeof value,
       };
 
-      if (typeof value === "object" && value !== null) {
+      if (typeof value === 'object' && value !== null) {
         nodeInfo.childCount = Object.keys(value).length;
         nodeInfo.sampleKeys = Object.keys(value).slice(0, 3);
         if (Object.keys(value).length > 3) {
@@ -61,7 +63,7 @@ export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
       if (!options.json) {
         console.log(chalk.white(`📁 ${key}`));
 
-        if (typeof value === "object" && value !== null) {
+        if (typeof value === 'object' && value !== null) {
           const childCount = Object.keys(value).length;
           console.log(chalk.gray(`   └── Children: ${childCount}`));
 
@@ -69,8 +71,8 @@ export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
           const childKeys = Object.keys(value).slice(0, 3);
           if (childKeys.length > 0) {
             const sampleText =
-              childKeys.join(", ") +
-              (Object.keys(value).length > 3 ? "..." : "");
+              childKeys.join(', ') +
+              (Object.keys(value).length > 3 ? '...' : '');
             console.log(chalk.gray(`   └── Sample keys: ${sampleText}`));
           }
         } else {
@@ -78,7 +80,7 @@ export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
           console.log(
             chalk.gray(
               `   └── Value: ${String(value).substring(0, 50)}${
-                String(value).length > 50 ? "..." : ""
+                String(value).length > 50 ? '...' : ''
               }`
             )
           );
@@ -89,7 +91,7 @@ export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
 
     // Prepare output data (used for both JSON and file output)
     const outputData = {
-      database: admin.app().options.databaseURL,
+      database: rtdbApp.options.databaseURL,
       timestamp: new Date().toISOString(),
       summary: {
         totalTopLevelNodes: Object.keys(allData).length,
@@ -100,7 +102,7 @@ export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
 
     // Handle file output (independent of JSON flag)
     if (options.output) {
-      const outputFile = options.output.endsWith(".json")
+      const outputFile = options.output.endsWith('.json')
         ? options.output
         : `${options.output}.json`;
 
@@ -117,7 +119,7 @@ export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
       console.log(JSON.stringify(outputData, null, 2));
     } else if (!options.output) {
       // Show summary only if not in JSON mode and no file output
-      console.log(chalk.blue("📊 Database Summary:"));
+      console.log(chalk.blue('📊 Database Summary:'));
       console.log(
         chalk.gray(
           `   └── Total top-level nodes: ${Object.keys(allData).length}`
@@ -129,20 +131,20 @@ export async function listRealtimeDatabase(options: ListRTDBOptionsType) {
         )
       );
       console.log(
-        chalk.gray(`   └── Database URL: ${admin.app().options.databaseURL}`)
+        chalk.gray(`   └── Database URL: ${rtdbApp.options.databaseURL}`)
       );
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
-    console.error(chalk.red("❌ Failed to list database:"), errorMessage);
 
-    if (errorMessage.includes("PERMISSION_DENIED")) {
-      console.log(chalk.yellow("💡 Make sure:"));
+    console.error(chalk.red('❌ Failed to list database:'), errorMessage);
+
+    if (errorMessage.includes('PERMISSION_DENIED')) {
+      console.log(chalk.yellow('💡 Make sure:'));
       console.log(
-        chalk.gray("   • Your account has Realtime Database read access")
+        chalk.gray('   • Your account has Realtime Database read access')
       );
-      console.log(chalk.gray("   • Database rules allow read access"));
+      console.log(chalk.gray('   • Database rules allow read access'));
     }
 
     throw error;
