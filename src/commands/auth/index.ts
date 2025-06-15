@@ -40,10 +40,10 @@ const loginCommand = authCommand
         console.log(chalk.blue('\n💡 Available options:'));
         console.log(chalk.gray('   • Use --force to re-authenticate'));
         console.log(
-          chalk.gray('   • Use "firestore-cli projects" to change project')
+          chalk.gray('   • Use "firebase-cli projects" to change project')
         );
         console.log(
-          chalk.gray('   • Use "firestore-cli reset" to clear configuration')
+          chalk.gray('   • Use "firebase-cli reset" to clear configuration')
         );
         return;
       }
@@ -174,7 +174,7 @@ const resetCommand = authCommand
         );
         console.log(
           chalk.gray(
-            "You'll need to run 'firestore-cli login' to authenticate again."
+            "You'll need to run 'firebase-cli login' to authenticate again."
           )
         );
       }
@@ -244,14 +244,12 @@ const projectsCommand = authCommand
           console.log(chalk.blue('💡 Commands:'));
           console.log(
             chalk.gray(
-              `   • firestore-cli projects --set-default ${serviceAccount.project_id}`
+              `   • firebase-cli projects --set-default ${serviceAccount.project_id}`
             )
           );
+          console.log(chalk.gray('   • firebase-cli projects --clear-default'));
           console.log(
-            chalk.gray('   • firestore-cli projects --clear-default')
-          );
-          console.log(
-            chalk.gray('   • firestore-cli --service-account <path> [command]')
+            chalk.gray('   • firebase-cli --service-account <path> [command]')
           );
           return;
         } catch (error) {
@@ -295,25 +293,23 @@ const projectsCommand = authCommand
           console.log(chalk.blue('💡 Commands:'));
           console.log(
             chalk.gray(
-              `   • firestore-cli projects --set-default ${serviceAccount.project_id}`
+              `   • firebase-cli projects --set-default ${serviceAccount.project_id}`
             )
           );
-          console.log(
-            chalk.gray('   • firestore-cli projects --clear-default')
-          );
-          console.log(chalk.gray('   • firestore-cli reset --config-only'));
+          console.log(chalk.gray('   • firebase-cli projects --clear-default'));
+          console.log(chalk.gray('   • firebase-cli reset --config-only'));
           return;
         } catch (error) {
           console.error(chalk.red('❌ Invalid saved service account file'));
-          console.log(chalk.yellow('💡 Try: firestore-cli login'));
+          console.log(chalk.yellow('💡 Try: firebase-cli login'));
           return;
         }
       }
 
       console.log(chalk.yellow('🔐 No authentication found'));
-      console.log(chalk.gray('Run: firestore-cli login'));
+      console.log(chalk.gray('Run: firebase-cli login'));
       console.log(
-        chalk.gray('Or use: firestore-cli --service-account <path> projects')
+        chalk.gray('Or use: firebase-cli --service-account <path> projects')
       );
     } catch (error) {
       const errorMessage =
@@ -322,7 +318,7 @@ const projectsCommand = authCommand
       console.error(chalk.red('❌ Failed to fetch projects:'), errorMessage);
 
       if (errorMessage.includes('auth')) {
-        console.log(chalk.yellow('💡 Try: firestore-cli login --force'));
+        console.log(chalk.yellow('💡 Try: firebase-cli login --force'));
       }
     }
   });

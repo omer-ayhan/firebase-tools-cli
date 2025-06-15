@@ -15,7 +15,7 @@ const convertCommand = remoteConfigCommand
   .option(
     '--user-email <email>',
     'User email for version info',
-    'firestore-cli@example.com'
+    'firebase-cli@example.com'
   )
   .option('--description <text>', 'Description prefix for parameters')
   .option('--add-conditions', 'Add default iOS/Android conditions')

@@ -1,34 +1,34 @@
 ### **Global Help:**
 
 ```bash
-firestore-cli --help
+firebase-cli --help
 # or
-firestore-cli -h
+firebase-cli -h
 ```
 
 ### **Command-Specific Help:**
 
 ```bash
-firestore-cli export --help
-firestore-cli import --help
-firestore-cli list --help
-firestore-cli query --help
+firebase-cli export --help
+firebase-cli import --help
+firebase-cli list --help
+firebase-cli query --help
 ```
 
 ### **Version:**
 
 ```bash
-firestore-cli --version
+firebase-cli --version
 # or
-firestore-cli -V
+firebase-cli -V
 ```
 
 ## 📋 Sample Help Output
 
-When you run `firestore-cli --help`, you'll see:
+When you run `firebase-cli --help`, you'll see:
 
 ```
-Usage: firestore-cli [options] [command]
+Usage: firebase-cli [options] [command]
 
 CLI tool for Firestore database operations
 
@@ -46,10 +46,10 @@ Commands:
   help [command]                   display help for command
 ```
 
-And for specific commands like `firestore-cli export --help`:
+And for specific commands like `firebase-cli export --help`:
 
 ```
-Usage: firestore-cli export [options]
+Usage: firebase-cli export [options]
 
 Export all collections from Firestore
 

@@ -96,10 +96,10 @@ const queryCommand = rtdbCommand
     'after',
     `
 Examples:
-  $ firestore-cli rtdb:query users --database-url https://my-project-default-rtdb.firebaseio.com/
-  $ firestore-cli rtdb:query users --where "age,>=,18" --limit 10
-  $ firestore-cli rtdb:query posts --order-by "timestamp,desc" --json
-  $ firestore-cli rtdb:query products --where "price,<,100" --output results.json`
+  $ firebase-cli rtdb:query users --database-url https://my-project-default-rtdb.firebaseio.com/
+  $ firebase-cli rtdb:query users --where "age,>=,18" --limit 10
+  $ firebase-cli rtdb:query posts --order-by "timestamp,desc" --json
+  $ firebase-cli rtdb:query products --where "price,<,100" --output results.json`
   )
   .action(async (database, options) => {
     try {
@@ -135,9 +135,9 @@ const exportCommand = rtdbCommand
     'after',
     `
 Examples:
-  $ firestore-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --output ./backups/
-  $ firestore-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/  --exclude users logs --output ./backups/
-  $ firestore-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --no-subcollections --no-detailed`
+  $ firebase-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --output ./backups/
+  $ firebase-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/  --exclude users logs --output ./backups/
+  $ firebase-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --no-subcollections --no-detailed`
   )
   .action(async (options) => {
     try {

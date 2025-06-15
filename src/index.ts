@@ -255,7 +255,7 @@ async function initializeFirebase(options: any) {
 
     if (errorMessage.includes('auth') || errorMessage.includes('credential')) {
       console.log(chalk.yellow('\n💡 Authentication troubleshooting:'));
-      console.log(chalk.gray('   • Try: firestore-cli login --force'));
+      console.log(chalk.gray('   • Try: firebase-cli login --force'));
       console.log(chalk.gray('   • Check your Google account permissions'));
       console.log(chalk.gray('   • Verify project access rights'));
       console.log(chalk.gray('   • Consider using a service account instead'));

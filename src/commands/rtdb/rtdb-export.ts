@@ -86,7 +86,7 @@ export async function exportRealtimeDatabase(options: ExportRTDBOptionsType) {
           timestamp: new Date().toISOString(),
           source: 'Firebase Realtime Database',
           databaseUrl: rtdbApp.options.databaseURL,
-          exportedBy: 'firestore-cli',
+          exportedBy: 'firebase-cli',
           totalNodes: countNodes(allData),
         },
         data: allData,
