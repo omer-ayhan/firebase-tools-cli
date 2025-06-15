@@ -5,17 +5,21 @@ import fs from 'fs';
 import inquirer from 'inquirer';
 import path from 'path';
 
-import packageJson from '../package.json';
 import authCommand from './commands/auth';
 import docsCommand from './commands/docs';
 import firestoreCommand from './commands/firestore';
 import remoteConfigCommand from './commands/remote-config';
 import rtdbCommand from './commands/rtdb';
-import { CONFIG_DIR, CONFIG_FILE } from './constants';
+import {
+  CONFIG_DIR,
+  CONFIG_FILE,
+  PROGRAM_DESCRIPTION,
+  PROGRAM_NAME,
+  PROGRAM_VERSION,
+} from './constants';
 
-const PROGRAM_NAME = packageJson.name;
-const PROGRAM_DESCRIPTION = packageJson.description;
-const PROGRAM_VERSION = packageJson.version;
+process.on('SIGINT', () => process.exit(0));
+process.on('SIGTERM', () => process.exit(0));
 
 const program = new Command();
 
@@ -283,8 +287,10 @@ program
   .addCommand(firestoreCommand.importCommand)
   .addCommand(firestoreCommand.listCommand)
   .addCommand(firestoreCommand.queryCommand)
+  .addCommand(rtdbCommand.importCommand)
   .addCommand(rtdbCommand.exportCommand)
   .addCommand(rtdbCommand.listCommand)
+  .addCommand(rtdbCommand.queryCommand)
   .addCommand(authCommand.loginCommand)
   .addCommand(authCommand.projectsCommand)
   .addCommand(authCommand.resetCommand)
@@ -297,23 +303,6 @@ program
 // .argument("<file>", "JSON file to import")
 // .option("-b, --batch-size <size>", "Batch size for imports", "500")
 // .option("-m, --merge", "Merge documents instead of overwriting");
-
-// TODO: RTDB query command
-// program
-// .command("rtdb:query")
-// .description("Query a specific database")
-// .argument("<database>", "Database name to query")
-// .option(
-//   "-w, --where <field,operator,value>",
-//   'Where clause (e.g., "age,>=,18")'
-// )
-// .option("-l, --limit <number>", "Limit number of results")
-// .option(
-//   "-o, --order-by <field,direction>",
-//   'Order by field (e.g., "name,asc")'
-// )
-// .option("--json", "Output results as JSON")
-// .option("--output <file>", "Save JSON output to file (use with --json)");
 
 // Parse arguments
 program.parse();
