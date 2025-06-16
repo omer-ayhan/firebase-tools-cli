@@ -31,7 +31,6 @@ program
 // Global options for authentication and project
 program
   .option('-s, --service-account <path>', 'Path to service account JSON file')
-  .option('-p, --project <id>', 'Google Cloud Project ID (overrides default)')
   .option('-d, --database-url <url>', 'Firebase Realtime Database URL')
   .hook('preAction', initializeFirebase)
   .addCommand(login)
