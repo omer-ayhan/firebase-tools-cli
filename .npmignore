@@ -3,8 +3,10 @@ meta.json
 src/
 tsconfig.json
 esbuild.config.js
+yarn.lock
 
 # Test files
+test_files/
 test/
 tests/
 *.test.js
