@@ -1,4 +1,14 @@
+import chalk from 'chalk';
+import fs from 'fs';
+import { Credentials } from 'google-auth-library';
 import inquirer from 'inquirer';
+
+import { CONFIG_DIR, CONFIG_FILE, CREDENTIALS_FILE } from './constants';
+
+type ConfigType = {
+  authMethod: string;
+  serviceAccountPath?: string;
+};
 
 function countNodes(data: any, count: number = 0): number {
   if (data === null || data === undefined) {
@@ -18,7 +28,7 @@ function countNodes(data: any, count: number = 0): number {
 }
 
 // Helper function to determine value type
-function determineValueType(value: any): string {
+function determineValueType(value: string | null): string {
   if (typeof value === 'boolean') {
     return 'BOOLEAN';
   } else if (typeof value === 'number') {
@@ -62,9 +72,43 @@ async function promptDatabaseUrl() {
   return databaseUrl;
 }
 
+function ensureConfigDir() {
+  if (!fs.existsSync(CONFIG_DIR)) {
+    fs.mkdirSync(CONFIG_DIR, { recursive: true });
+  }
+}
+
+// Save configuration
+function saveConfig(config: ConfigType) {
+  ensureConfigDir();
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+}
+
+// Load configuration
+function loadConfig() {
+  if (fs.existsSync(CONFIG_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    } catch (error) {
+      console.warn(chalk.yellow('⚠️  Could not load config file'));
+      return {};
+    }
+  }
+  return {};
+}
+
+function saveCredentials(credentials: Credentials) {
+  ensureConfigDir();
+  fs.writeFileSync(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2));
+}
+
 export {
   countNodes,
   determineValueType,
   validateDatabaseUrl,
   promptDatabaseUrl,
+  ensureConfigDir,
+  saveConfig,
+  loadConfig,
+  saveCredentials,
 };
