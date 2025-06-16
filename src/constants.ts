@@ -10,7 +10,6 @@ export const CONFIG_DIR = path.join(require('os').homedir(), '.firebase-cli');
 export const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 export const CREDENTIALS_FILE = path.join(CONFIG_DIR, 'credentials.json');
 
-// OAuth2 configuration - FIXED SCOPES
 export const OAUTH_CONFIG = {
   clientId: 'work-in-progress',
   clientSecret: 'work-in-progress',
