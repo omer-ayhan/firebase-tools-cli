@@ -11,7 +11,7 @@ const remoteConfigConvert = program
   .option(
     '--user-email <email>',
     'User email for version info',
-    'firebase-cli@example.com'
+    'firebase-tools-cli@example.com'
   )
   .option('--description <text>', 'Description prefix for parameters')
   .option('--add-conditions', 'Add default iOS/Android conditions')

@@ -10,35 +10,35 @@ A comprehensive command-line interface for Firebase Firestore database operation
 ## Core Commands
 
 ### Authentication Commands
-- \`firebase-cli login\` - Interactive authentication setup
+- \`firebase-tools-cli login\` - Interactive authentication setup
   - \`--force\` - Force re-authentication
   - \`--method <oauth|service-account>\` - Specify authentication method
-- \`firebase-cli logout\` - Clear all credentials and configuration
-- \`firebase-cli reset\` - Reset configuration and credentials
+- \`firebase-tools-cli logout\` - Clear all credentials and configuration
+- \`firebase-tools-cli reset\` - Reset configuration and credentials
   - \`--config-only\` - Reset only configuration
   - \`--credentials-only\` - Reset only credentials
 
 ### Data Operations
-- \`firebase-cli export\` - Export all collections
+- \`firebase-tools-cli export\` - Export all collections
   - \`-o, --output <dir>\` - Output directory (default: ./)
   - \`--no-detailed\` - Skip detailed format export
   - \`--no-importable\` - Skip importable format export
   - \`--no-subcollections\` - Skip subcollections
   - \`-e, --exclude <collections...>\` - Exclude specific collections
 
-- \`firebase-cli import <file>\` - Import data from JSON file
+- \`firebase-tools-cli import <file>\` - Import data from JSON file
   - \`-b, --batch-size <size>\` - Batch size for imports (default: 500)
   - \`-m, --merge\` - Merge documents instead of overwriting
   - \`-e, --exclude <collections...>\` - Exclude specific collections
 
-- \`firebase-cli query <collection>\` - Query a specific collection
+- \`firebase-tools-cli query <collection>\` - Query a specific collection
   - \`-w, --where <field,operator,value>\` - Where clause (e.g., "age,>=,18")
   - \`-l, --limit <number>\` - Limit number of results
   - \`-o, --order-by <field,direction>\` - Order by field (e.g., "name,asc")
   - \`--json\` - Output results as JSON
   - \`--output <file>\` - Save JSON output to file
 
-- \`firebase-cli convert <file>\` - Convert JSON to Firebase Remote Config format
+- \`firebase-tools-cli convert <file>\` - Convert JSON to Firebase Remote Config format
   - \`-o, --output <file>\` - Output file name
   - \`--version-number <number>\` - Version number for Remote Config (default: "1")
   - \`--user-email <email>\` - User email for version info
@@ -47,11 +47,11 @@ A comprehensive command-line interface for Firebase Firestore database operation
   - \`--template <type>\` - Use predefined template (basic|mobile|web)
 
 ### Management Commands
-- \`firebase-cli list\` - List all collections with basic info
-- \`firebase-cli projects\` - Manage projects
+- \`firebase-tools-cli list\` - List all collections with basic info
+- \`firebase-tools-cli projects\` - Manage projects
   - \`--set-default <project>\` - Set default project
   - \`--clear-default\` - Clear default project
-- \`firebase-cli docs\` - Print or save this documentation
+- \`firebase-tools-cli docs\` - Print or save this documentation
   - \`--save <file>\` - Save documentation to file
 
 ### Global Options
@@ -147,31 +147,31 @@ Supported Firestore query operators:
 - \`not-in\` - Value is not in array
 
 ## Configuration Files
-- \`~/.firebase-cli/config.json\` - Default project and settings
-- \`~/.firebase-cli/credentials.json\` - OAuth credentials (auto-managed)
+- \`~/.firebase-tools-cli/config.json\` - Default project and settings
+- \`~/.firebase-tools-cli/credentials.json\` - OAuth credentials (auto-managed)
 
 ## Common Workflows
 
 ### Initial Setup
-1. \`firebase-cli login\` - Authenticate and select default project
-2. \`firebase-cli list\` - Verify connection and see collections
+1. \`firebase-tools-cli login\` - Authenticate and select default project
+2. \`firebase-tools-cli list\` - Verify connection and see collections
 
 ### Backup and Restore
-1. \`firebase-cli export -o ./backups\` - Create backup
-2. \`firebase-cli import backup_file.json\` - Restore from backup
+1. \`firebase-tools-cli export -o ./backups\` - Create backup
+2. \`firebase-tools-cli import backup_file.json\` - Restore from backup
 
 ### Data Analysis
-1. \`firebase-cli query users --where "age,>=,18" --json --output adults.json\`
-2. \`firebase-cli query posts --order-by "createdAt,desc" --limit 10\`
+1. \`firebase-tools-cli query users --where "age,>=,18" --json --output adults.json\`
+2. \`firebase-tools-cli query posts --order-by "createdAt,desc" --limit 10\`
 
 ### Project Management
-1. \`firebase-cli projects\` - List available projects
-2. \`firebase-cli projects --set-default my-project\` - Set default
-3. \`firebase-cli --project other-project list\` - Use different project
+1. \`firebase-tools-cli projects\` - List available projects
+2. \`firebase-tools-cli projects --set-default my-project\` - Set default
+3. \`firebase-tools-cli --project other-project list\` - Use different project
 
 ### Remote Config Conversion
-1. \`firebase-cli convert app-config.json --add-conditions --description "Production Config"\` - With conditions
-2. \`firebase-cli convert feature-flags.json -o prod-remote-config.json --user-email admin@myapp.com --version-number "2"\` - Custom output
+1. \`firebase-tools-cli convert app-config.json --add-conditions --description "Production Config"\` - With conditions
+2. \`firebase-tools-cli convert feature-flags.json -o prod-remote-config.json --user-email admin@myapp.com --version-number "2"\` - Custom output
 
 ## Error Handling
 - Authentication errors: Use \`--force\` flag or \`logout\` then \`login\`
@@ -199,26 +199,26 @@ Supported Firestore query operators:
 ### CI/CD Pipeline
 \`\`\`bash
 # Export production data
-firebase-cli --service-account ./prod-key.json export -o ./backups
+firebase-tools-cli --service-account ./prod-key.json export -o ./backups
 
 # Import to staging
-firebase-cli --service-account ./staging-key.json import ./backups/firestore_export.json
+firebase-tools-cli --service-account ./staging-key.json import ./backups/firestore_export.json
 \`\`\`
 
 ### Automated Backups
 \`\`\`bash
 #!/bin/bash
 DATE=$(date +%Y%m%d_%H%M%S)
-firebase-cli export -o "./backups/backup_$DATE"
+firebase-tools-cli export -o "./backups/backup_$DATE"
 \`\`\`
 
 ### Data Migration
 \`\`\`bash
 # Export from old project
-firebase-cli --project old-project export -o ./migration
+firebase-tools-cli --project old-project export -o ./migration
 
 # Import to new project
-firebase-cli --project new-project import ./migration/firestore_export.json
+firebase-tools-cli --project new-project import ./migration/firestore_export.json
 \`\`\`
 
 ## Troubleshooting
@@ -228,13 +228,13 @@ firebase-cli --project new-project import ./migration/firestore_export.json
 2. **"Project not found"**: Verify project ID and authentication
 3. **"Quota exceeded"**: Reduce batch size or add delays
 4. **"Invalid JSON"**: Validate input file format
-5. **"Token expired"**: Run \`firebase-cli login --force\`
+5. **"Token expired"**: Run \`firebase-tools-cli login --force\`
 
 ### Debug Mode
 Set environment variable for detailed logging:
 \`\`\`bash
-export DEBUG=firebase-cli:*
-firebase-cli <command>
+export DEBUG=firebase-tools-cli:*
+firebase-tools-cli <command>
 \`\`\`
 
 ### Support

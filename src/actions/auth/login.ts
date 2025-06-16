@@ -335,10 +335,10 @@ const loginAction = async (options: LoginActionType) => {
       console.log(chalk.blue('\n💡 Available options:'));
       console.log(chalk.gray('   • Use --force to re-authenticate'));
       console.log(
-        chalk.gray('   • Use "firebase-cli projects" to change project')
+        chalk.gray('   • Use "firebase-tools-cli projects" to change project')
       );
       console.log(
-        chalk.gray('   • Use "firebase-cli reset" to clear configuration')
+        chalk.gray('   • Use "firebase-tools-cli reset" to clear configuration')
       );
       return;
     }

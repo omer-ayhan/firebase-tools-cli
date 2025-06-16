@@ -152,12 +152,16 @@ const listProjectsAction = async (
         console.log(chalk.blue('💡 Commands:'));
         console.log(
           chalk.gray(
-            `   • firebase-cli projects --set-default ${serviceAccount.project_id}`
+            `   • firebase-tools-cli projects --set-default ${serviceAccount.project_id}`
           )
         );
-        console.log(chalk.gray('   • firebase-cli projects --clear-default'));
         console.log(
-          chalk.gray('   • firebase-cli --service-account <path> [command]')
+          chalk.gray('   • firebase-tools-cli projects --clear-default')
+        );
+        console.log(
+          chalk.gray(
+            '   • firebase-tools-cli --service-account <path> [command]'
+          )
         );
         return;
       } catch (error) {
@@ -196,23 +200,25 @@ const listProjectsAction = async (
         console.log(chalk.blue('💡 Commands:'));
         console.log(
           chalk.gray(
-            `   • firebase-cli projects --set-default ${serviceAccount.project_id}`
+            `   • firebase-tools-cli projects --set-default ${serviceAccount.project_id}`
           )
         );
-        console.log(chalk.gray('   • firebase-cli projects --clear-default'));
-        console.log(chalk.gray('   • firebase-cli reset --config-only'));
+        console.log(
+          chalk.gray('   • firebase-tools-cli projects --clear-default')
+        );
+        console.log(chalk.gray('   • firebase-tools-cli reset --config-only'));
         return;
       } catch (error) {
         console.error(chalk.red('❌ Invalid saved service account file'));
-        console.log(chalk.yellow('💡 Try: firebase-cli login'));
+        console.log(chalk.yellow('💡 Try: firebase-tools-cli login'));
         return;
       }
     }
 
     console.log(chalk.yellow('🔐 No authentication found'));
-    console.log(chalk.gray('Run: firebase-cli login'));
+    console.log(chalk.gray('Run: firebase-tools-cli login'));
     console.log(
-      chalk.gray('Or use: firebase-cli --service-account <path> projects')
+      chalk.gray('Or use: firebase-tools-cli --service-account <path> projects')
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -220,7 +226,7 @@ const listProjectsAction = async (
     console.error(chalk.red('❌ Failed to fetch projects:'), errorMessage);
 
     if (errorMessage.includes('auth')) {
-      console.log(chalk.yellow('💡 Try: firebase-cli login --force'));
+      console.log(chalk.yellow('💡 Try: firebase-tools-cli login --force'));
     }
   }
 };

@@ -54,7 +54,7 @@ export async function convertToRemoteConfig(
         versionNumber: options.versionNumber || '1',
         updateTime: new Date().toISOString(),
         updateUser: {
-          email: options.userEmail || 'firebase-cli@example.com',
+          email: options.userEmail || 'firebase-tools-cli@example.com',
         },
         updateOrigin: 'CONSOLE',
         updateType: 'INCREMENTAL_UPDATE',

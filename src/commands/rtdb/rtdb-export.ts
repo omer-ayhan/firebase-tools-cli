@@ -19,9 +19,9 @@ const rtdbExport = rtdbProgram
     'after',
     `
 Examples:
-  $ firebase-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --output ./backups/
-  $ firebase-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/  --exclude users logs --output ./backups/
-  $ firebase-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --no-subcollections --no-detailed`
+  $ firebase-tools-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --output ./backups/
+  $ firebase-tools-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/  --exclude users logs --output ./backups/
+  $ firebase-tools-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --no-subcollections --no-detailed`
   )
   .action(async (options) => {
     try {

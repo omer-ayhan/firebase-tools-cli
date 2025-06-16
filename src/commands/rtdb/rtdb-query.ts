@@ -26,10 +26,10 @@ const rtdbQuery = rtdbProgram
     'after',
     `
 Examples:
-  $ firebase-cli rtdb:query users --database-url https://my-project-default-rtdb.firebaseio.com/
-  $ firebase-cli rtdb:query users --where "age,>=,18" --limit 10
-  $ firebase-cli rtdb:query posts --order-by "timestamp,desc" --json
-  $ firebase-cli rtdb:query products --where "price,<,100" --output results.json`
+  $ firebase-tools-cli rtdb:query users --database-url https://my-project-default-rtdb.firebaseio.com/
+  $ firebase-tools-cli rtdb:query users --where "age,>=,18" --limit 10
+  $ firebase-tools-cli rtdb:query posts --order-by "timestamp,desc" --json
+  $ firebase-tools-cli rtdb:query products --where "price,<,100" --output results.json`
   )
   .action(async (database, options) => {
     try {

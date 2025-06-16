@@ -6,7 +6,10 @@ export const PROGRAM_NAME = packageJson.name;
 export const PROGRAM_DESCRIPTION = packageJson.description;
 export const PROGRAM_VERSION = packageJson.version;
 
-export const CONFIG_DIR = path.join(require('os').homedir(), '.firebase-cli');
+export const CONFIG_DIR = path.join(
+  require('os').homedir(),
+  '.firebase-tools-cli'
+);
 export const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 export const CREDENTIALS_FILE = path.join(CONFIG_DIR, 'credentials.json');
 

@@ -89,7 +89,7 @@ const resetAction = async (options: ResetActionType) => {
       );
       console.log(
         chalk.gray(
-          "You'll need to run 'firebase-cli login' to authenticate again."
+          "You'll need to run 'firebase-tools-cli login' to authenticate again."
         )
       );
     }
