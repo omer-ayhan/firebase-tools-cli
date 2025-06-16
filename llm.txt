@@ -1,7 +1,7 @@
 # Firestore CLI Tool - LLM Documentation
 
 ## Overview
-A comprehensive command-line interface for Firebase Firestore database operations including export, import, querying, and collection management with support for both OAuth and service account authentication.
+A comprehensive command-line interface for Firebase Firestore database operations including export, import, querying, collection management, and Remote Config conversion with support for both OAuth and service account authentication.
 
 ## Authentication Methods
 1. **OAuth (Interactive)**: Browser-based Google account authentication
@@ -37,6 +37,14 @@ A comprehensive command-line interface for Firebase Firestore database operation
   - `-o, --order-by <field,direction>` - Order by field (e.g., "name,asc")
   - `--json` - Output results as JSON
   - `--output <file>` - Save JSON output to file
+
+- `firebase-cli convert <file>` - Convert JSON to Firebase Remote Config format
+  - `-o, --output <file>` - Output file name
+  - `--version-number <number>` - Version number for Remote Config (default: "1")
+  - `--user-email <email>` - User email for version info
+  - `--description <text>` - Description prefix for parameters
+  - `--add-conditions` - Add default iOS/Android conditions
+  - `--template <type>` - Use predefined template (basic|mobile|web)
 
 ### Management Commands
 - `firebase-cli list` - List all collections with basic info
@@ -77,6 +85,54 @@ Subcollections are handled with special naming convention:
 - Format: `parentCollection__parentDoc__subcollection`
 - Example: `users__user1__posts` represents posts subcollection under users/user1
 
+### Remote Config Format
+The convert command transforms simple JSON into Firebase Remote Config format:
+
+**Input JSON:**
+```json
+{
+  "appName": "My App",
+  "maxUsers": 100,
+  "isFeatureEnabled": true,
+  "config": {
+    "theme": "dark",
+    "version": "1.0.0"
+  }
+}
+```
+
+**Output Remote Config:**
+```json
+{
+  "conditions": [],
+  "parameters": {
+    "appName": {
+      "defaultValue": { "value": "My App" },
+      "valueType": "STRING"
+    },
+    "maxUsers": {
+      "defaultValue": { "value": "100" },
+      "valueType": "NUMBER"
+    },
+    "isFeatureEnabled": {
+      "defaultValue": { "value": "true" },
+      "valueType": "BOOLEAN"
+    },
+    "config": {
+      "defaultValue": { "value": "{\\"theme\\":\\"dark\\",\\"version\\":\\"1.0.0\\"}" },
+      "valueType": "JSON"
+    }
+  },
+  "version": {
+    "versionNumber": "1",
+    "updateTime": "2024-01-01T00:00:00.000Z",
+    "updateUser": { "email": "user@example.com" },
+    "updateOrigin": "CONSOLE",
+    "updateType": "INCREMENTAL_UPDATE"
+  }
+}
+```
+
 ## Query Operators
 Supported Firestore query operators:
 - `==` - Equal to
@@ -113,6 +169,10 @@ Supported Firestore query operators:
 2. `firebase-cli projects --set-default my-project` - Set default
 3. `firebase-cli --project other-project list` - Use different project
 
+### Remote Config Conversion
+1. `firebase-cli convert app-config.json --add-conditions --description "Production Config"` - With conditions
+2. `firebase-cli convert feature-flags.json -o prod-remote-config.json --user-email admin@myapp.com --version-number "2"` - Custom output
+
 ## Error Handling
 - Authentication errors: Use `--force` flag or `logout` then `login`
 - Permission errors: Check Firestore rules and IAM permissions
@@ -124,12 +184,14 @@ Supported Firestore query operators:
 - Service account keys should be kept secure
 - Use IAM roles with minimal required permissions
 - Credentials are stored in user home directory
+- Remote Config parameters are public - avoid sensitive data
 
 ## Performance Tips
 - Use `--exclude` to skip large collections during export
 - Adjust `--batch-size` based on document size and network
 - Use `--limit` for large query results
 - Enable `--no-subcollections` for faster exports when not needed
+- Keep Remote Config parameters under 1MB total size
 
 ## Integration Examples
 
@@ -184,11 +246,29 @@ firebase-cli query posts --order-by "timestamp,desc" --limit 100 --json
    - Check if projects have Firestore enabled
    - Try service account authentication
 
+5. **"Project not found"**: Verify project ID and authentication
+6. **"Quota exceeded"**: Reduce batch size or add delays
+7. **"Invalid JSON"**: Validate input file format
+8. **"Token expired"**: Run `firebase-cli login --force`
+
 ### Debug Commands
 - `firebase-cli projects` - Verify project access
 - `firebase-cli list` - Test database connection
 - `firebase-cli reset --credentials-only` - Clear auth issues
 - `firebase-cli login --force` - Force re-authentication
+
+### Debug Mode
+Set environment variable for detailed logging:
+```bash
+export DEBUG=firebase-cli:*
+firebase-cli <command>
+```
+
+### Support
+- Check GitHub issues for known problems
+- Verify Firebase project settings
+- Test with minimal data first
+- Use service account for production workflows
 
 ## Version Information
 - Node.js: >=14.0.0 required
