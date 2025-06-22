@@ -13,14 +13,15 @@
   },
   "scripts": {
     "clean": "node -e \"fs.rmSync('dist', { recursive: true, force: true });\"",
-    "build": "tsc --noEmit && node esbuild.config.js",
+    "build": "tsc --noEmit && node esbuild.config.js && chmod +x dist/index.js",
     "build:watch": "npm run build && tsc --watch",
     "build:analyze": "NODE_ENV=development npm run build",
     "start": "npm run build && node dist/index.js",
     "dev": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublishOnly": "npm run build",
-    "prepare": "npm run clean && npm run build"
+    "prepare": "npm run clean && npm run build",
+    "postinstall": "test -f dist/index.js && chmod +x dist/index.js || true"
   },
   "keywords": [
     "firestore",
