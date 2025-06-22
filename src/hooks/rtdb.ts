@@ -5,7 +5,7 @@ import * as admin from 'firebase-admin';
 import { promptDatabaseUrl, validateDatabaseUrl } from '@/utils';
 
 async function rtdbValidatePreAction(thisCommand: Command) {
-  const options = thisCommand.opts();
+  const options = { ...thisCommand.opts(), ...thisCommand.parent?.opts() };
   const isDatabaseValid = options.databaseUrl
     ? validateDatabaseUrl(options.databaseUrl)
     : false;
