@@ -17,6 +17,14 @@ export async function exportRealtimeDatabase(options: ExportRTDBOptionsType) {
   try {
     console.log(chalk.blue('🔍 Starting Realtime Database export...\n'));
 
+    if (options.importable === false && options.detailed === false) {
+      console.log(chalk.yellow('💡 No export format selected'));
+      console.log(
+        chalk.gray('   • Use --detailed or --importable to export data')
+      );
+      return;
+    }
+
     // Get the database reference (should be configured during initialization)
     const rtdbApp = admin.app('rtdb-app');
     const rtdb = rtdbApp.database();
