@@ -13,7 +13,7 @@ const rtdbExport = rtdbProgram
   .option('--no-importable', 'Skip importable format export')
   .option('--no-subcollections', 'Skip nested data (limit to top level only)')
   .option('-e, --exclude <paths...>', 'Exclude specific top-level paths')
-  .option('--database-url <url>', 'Firebase Realtime Database URL')
+  .option('-d, --database-url <url>', 'Firebase Realtime Database URL')
   .hook('preAction', rtdbValidatePreAction)
   .addHelpText(
     'after',
