@@ -23,25 +23,26 @@ export async function queryRealtimeDatabase(
     // Start with the base reference
     let query: admin.database.Query | admin.database.Reference = rtdb.ref(path);
 
-    // Apply ordering if specified
+    // Parse orderBy and where clauses to handle Firebase RTDB limitations
+    let orderByField: string | null = null;
+    let orderByDirection: 'asc' | 'desc' = 'asc';
+    let whereField: string | null = null;
+    let whereOperator: string | null = null;
+    let whereParsedValue: any = null;
+
     if (options.orderBy) {
       const [field, direction] = options.orderBy.split(',');
       if (!field) {
         throw new Error('Order by field is required (e.g., "name,asc")');
       }
+      orderByField = field;
+      orderByDirection = (direction?.toLowerCase() || 'asc') as 'asc' | 'desc';
 
-      const dir = direction?.toLowerCase() || 'asc';
-      if (dir === 'asc') {
-        query = query.orderByChild(field);
-      } else if (dir === 'desc') {
-        // Firebase RTDB doesn't have native desc ordering, we'll handle this in post-processing
-        query = query.orderByChild(field);
-      } else {
+      if (orderByDirection !== 'asc' && orderByDirection !== 'desc') {
         throw new Error('Order direction must be "asc" or "desc"');
       }
     }
 
-    // Apply where clause if specified
     if (options.where) {
       const [field, operator, value] = options.where.split(',');
       if (!field || !operator || value === undefined) {
@@ -49,98 +50,223 @@ export async function queryRealtimeDatabase(
           'Where clause must be in format "field,operator,value"'
         );
       }
+      whereField = field;
+      whereOperator = operator;
 
       // Parse value to appropriate type
-      let parsedValue: any = value;
-      if (value === 'true') parsedValue = true;
-      else if (value === 'false') parsedValue = false;
-      else if (value === 'null') parsedValue = null;
-      else if (!isNaN(Number(value))) parsedValue = Number(value);
+      whereParsedValue = value;
+      if (value === 'true') whereParsedValue = true;
+      else if (value === 'false') whereParsedValue = false;
+      else if (value === 'null') whereParsedValue = null;
+      else if (!isNaN(Number(value))) whereParsedValue = Number(value);
+    }
 
-      // Apply Firebase RTDB query operators
-      switch (operator) {
+    // Handle Firebase RTDB query limitations
+    if (whereField && orderByField && whereField !== orderByField) {
+      // Firebase RTDB doesn't support ordering by one field and filtering by another
+      // We'll do post-processing for ordering in this case
+      console.log(
+        chalk.yellow(
+          '⚠️  Firebase RTDB limitation: Cannot order by one field and filter by another field in the same query.'
+        )
+      );
+      console.log(
+        chalk.yellow(
+          '   Applying filter first, then sorting results in post-processing.'
+        )
+      );
+
+      // Apply where clause only
+      switch (whereOperator) {
         case '==':
         case '=':
-          query = query.orderByChild(field).equalTo(parsedValue);
+          query = query.orderByChild(whereField).equalTo(whereParsedValue);
           break;
         case '>=':
-          query = query.orderByChild(field).startAt(parsedValue);
+          query = query.orderByChild(whereField).startAt(whereParsedValue);
           break;
         case '<=':
-          query = query.orderByChild(field).endAt(parsedValue);
+          query = query.orderByChild(whereField).endAt(whereParsedValue);
           break;
         case '>':
-          // Firebase doesn't have direct > operator, we'll filter in post-processing
-          query = query.orderByChild(field).startAt(parsedValue);
+          query = query.orderByChild(whereField).startAt(whereParsedValue);
           break;
         case '<':
-          // Firebase doesn't have direct < operator, we'll filter in post-processing
-          query = query.orderByChild(field).endAt(parsedValue);
+          query = query.orderByChild(whereField).endAt(whereParsedValue);
           break;
         default:
           throw new Error(
-            `Unsupported operator: ${operator}. Supported: ==, >=, <=, >, <`
+            `Unsupported operator: ${whereOperator}. Supported: ==, >=, <=, >, <`
           );
       }
+    } else if (whereField) {
+      // Apply where clause (and ordering on the same field if specified)
+      switch (whereOperator) {
+        case '==':
+        case '=':
+          query = query.orderByChild(whereField).equalTo(whereParsedValue);
+          break;
+        case '>=':
+          query = query.orderByChild(whereField).startAt(whereParsedValue);
+          break;
+        case '<=':
+          query = query.orderByChild(whereField).endAt(whereParsedValue);
+          break;
+        case '>':
+          query = query.orderByChild(whereField).startAt(whereParsedValue);
+          break;
+        case '<':
+          query = query.orderByChild(whereField).endAt(whereParsedValue);
+          break;
+        default:
+          throw new Error(
+            `Unsupported operator: ${whereOperator}. Supported: ==, >=, <=, >, <`
+          );
+      }
+    } else if (orderByField) {
+      // Apply ordering only (no where clause)
+      query = query.orderByChild(orderByField);
     }
 
+    // Determine if we need post-processing that would conflict with limit
+    // Firebase RTDB object results don't preserve order, so we always need post-processing for ordering
+    const needsPostProcessSort = orderByField !== null;
+
     // Apply limit if specified
+    let limitNum: number | null = null;
     if (options.limit) {
-      const limitNum = parseInt(options.limit.toString());
+      limitNum = parseInt(options.limit.toString());
       if (isNaN(limitNum) || limitNum <= 0) {
         throw new Error('Limit must be a positive number');
       }
-      query = query.limitToFirst(limitNum);
+
+      // Only apply limit in Firebase if we don't need post-processing
+      // Otherwise, we'll apply it after sorting
+      if (!needsPostProcessSort) {
+        query = query.limitToFirst(limitNum);
+      }
     }
 
     // Execute the query
     const snapshot = await query.once('value');
     let results = snapshot.val();
 
-    if (!results) {
+    if (results === null || results === undefined) {
       console.log(chalk.yellow('⚠️  No data found matching the query'));
       return;
     }
 
-    // Post-process for operators that Firebase doesn't support natively
-    if (options.where) {
-      const [field, operator, value] = options.where.split(',');
-      let parsedValue: any = value;
-      if (value === 'true') parsedValue = true;
-      else if (value === 'false') parsedValue = false;
-      else if (value === 'null') parsedValue = null;
-      else if (!isNaN(Number(value))) parsedValue = Number(value);
+    // Handle primitive values (strings, numbers, booleans)
+    const isPrimitive = typeof results !== 'object' || results === null;
+    if (isPrimitive) {
+      console.log(chalk.green(`✅ Found primitive value at path /${path}\n`));
+      console.log(chalk.white(`🔑 Value: ${String(results)}`));
+      console.log(chalk.gray(`   └── Type: ${typeof results}`));
 
-      if (operator === '>' || operator === '<') {
-        const filteredResults: any = {};
-        for (const [key, item] of Object.entries(results)) {
-          const fieldValue = (item as any)[field];
-          if (operator === '>' && fieldValue > parsedValue) {
-            filteredResults[key] = item;
-          } else if (operator === '<' && fieldValue < parsedValue) {
-            filteredResults[key] = item;
-          }
-        }
-        results = filteredResults;
+      // Show query summary for primitive values
+      console.log(chalk.blue('\n📊 Query Summary:'));
+      console.log(chalk.gray(`   └── Path: /${path}`));
+      console.log(chalk.gray(`   └── Result type: ${typeof results}`));
+      console.log(chalk.gray(`   └── Value: ${String(results)}`));
+      console.log(
+        chalk.gray(`   └── Database: ${rtdbApp.options.databaseURL}`)
+      );
+
+      // Handle JSON output for primitive values
+      if (options.json) {
+        const outputData = {
+          database: rtdbApp.options.databaseURL,
+          path: `/${path}`,
+          timestamp: new Date().toISOString(),
+          query: {
+            where: options.where || null,
+            orderBy: options.orderBy || null,
+            limit: options.limit || null,
+          },
+          summary: {
+            type: typeof results,
+            isPrimitive: true,
+          },
+          result: results,
+        };
+        console.log(JSON.stringify(outputData, null, 2));
       }
+
+      // Handle file output for primitive values
+      if (options.output) {
+        const outputFile = options.output.endsWith('.json')
+          ? options.output
+          : `${options.output}.json`;
+
+        const outputData = {
+          database: rtdbApp.options.databaseURL,
+          path: `/${path}`,
+          timestamp: new Date().toISOString(),
+          query: {
+            where: options.where || null,
+            orderBy: options.orderBy || null,
+            limit: options.limit || null,
+          },
+          summary: {
+            type: typeof results,
+            isPrimitive: true,
+          },
+          result: results,
+        };
+
+        fs.writeFileSync(outputFile, JSON.stringify(outputData, null, 2));
+        console.log(chalk.green(`📄 Query results saved to: ${outputFile}`));
+
+        const fileSize = (fs.statSync(outputFile).size / 1024).toFixed(2);
+        console.log(chalk.gray(`   └── File size: ${fileSize} KB`));
+      }
+
+      return;
     }
 
-    // Handle descending order (post-process since Firebase doesn't support it natively)
-    if (options.orderBy) {
-      const [field, direction] = options.orderBy.split(',');
-      const dir = direction?.toLowerCase() || 'asc';
+    // Post-process for operators that Firebase doesn't support natively
+    if (
+      whereField &&
+      whereOperator &&
+      (whereOperator === '>' || whereOperator === '<')
+    ) {
+      const filteredResults: any = {};
+      for (const [key, item] of Object.entries(results)) {
+        const fieldValue = (item as any)[whereField];
+        if (whereOperator === '>' && fieldValue > whereParsedValue) {
+          filteredResults[key] = item;
+        } else if (whereOperator === '<' && fieldValue < whereParsedValue) {
+          filteredResults[key] = item;
+        }
+      }
+      results = filteredResults;
+    }
 
-      if (dir === 'desc') {
-        const sortedEntries = Object.entries(results).sort(([, a], [, b]) => {
-          const aVal = (a as any)[field];
-          const bVal = (b as any)[field];
+    // Handle post-processing for ordering
+    if (orderByField) {
+      // Post-process sorting because Firebase RTDB object results don't preserve order
+      const sortedEntries = Object.entries(results).sort(([, a], [, b]) => {
+        const aVal = (a as any)[orderByField];
+        const bVal = (b as any)[orderByField];
+
+        if (orderByDirection === 'desc') {
           if (aVal > bVal) return -1;
           if (aVal < bVal) return 1;
           return 0;
-        });
+        } else {
+          if (aVal < bVal) return -1;
+          if (aVal > bVal) return 1;
+          return 0;
+        }
+      });
 
-        results = Object.fromEntries(sortedEntries);
-      }
+      results = Object.fromEntries(sortedEntries);
+    }
+
+    // Apply limit after post-processing if needed
+    if (limitNum && needsPostProcessSort) {
+      const limitedEntries = Object.entries(results).slice(0, limitNum);
+      results = Object.fromEntries(limitedEntries);
     }
 
     // Count results
@@ -197,7 +323,7 @@ export async function queryRealtimeDatabase(
             break;
           }
 
-          console.log(chalk.white(`🔑 ${key}`));
+          console.log(chalk.white(`📁 ${key}`));
 
           if (typeof value === 'object' && value !== null) {
             // Show object structure
