@@ -41,7 +41,7 @@ function determineValueType(value: string | null): string {
 }
 
 function validateDatabaseUrl(url: string): boolean {
-  const urlPattern = /^https:\/\/.*\.firebasedatabase\.app\/?$/;
+  const urlPattern = /^https:\/\/.*\.firebaseio\.com\/?$/;
   return urlPattern.test(url.trim());
 }
 
