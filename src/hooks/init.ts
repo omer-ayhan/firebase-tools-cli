@@ -63,36 +63,6 @@ async function configureAdminServiceAccount(
   return { db, credential, projectId };
 }
 
-async function testFirebaseConnection(db: admin.firestore.Firestore) {
-  try {
-    await db.listCollections();
-    console.log(chalk.green('🔥 Firebase initialized successfully\n'));
-  } catch (testError) {
-    if (
-      testError instanceof Error &&
-      testError.message.includes('PERMISSION_DENIED')
-    ) {
-      console.error(
-        chalk.red('❌ Permission denied - check your project access')
-      );
-      console.log(chalk.yellow('💡 Make sure:'));
-      console.log(
-        chalk.gray(
-          '   • Your service account has Firestore access in this project'
-        )
-      );
-      console.log(chalk.gray('   • The project has Firestore enabled'));
-      console.log(chalk.gray("   • You're using the correct project ID"));
-    } else {
-      console.error(
-        chalk.red('❌ Firebase connection test failed:'),
-        testError instanceof Error ? testError.message : String(testError)
-      );
-    }
-    throw testError;
-  }
-}
-
 async function initializeFirebase(thisCommand: Command) {
   const commandName = thisCommand.args[0];
   const skipAuthCommands = ['reset', 'logout', 'login', 'docs', 'convert'];
@@ -119,8 +89,6 @@ async function initializeFirebase(thisCommand: Command) {
         projectIdValue
       );
 
-      await testFirebaseConnection(db);
-
       return;
     } else {
       console.log(chalk.blue('🔐 Checking authentication...'));
@@ -141,8 +109,6 @@ async function initializeFirebase(thisCommand: Command) {
           config.serviceAccountPath,
           projectIdValue
         );
-
-        await testFirebaseConnection(db);
 
         return;
       }
@@ -190,8 +156,6 @@ async function initializeFirebase(thisCommand: Command) {
           )
         );
       }
-
-      await testFirebaseConnection(db);
 
       return;
     }
