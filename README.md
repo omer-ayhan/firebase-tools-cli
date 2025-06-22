@@ -68,10 +68,13 @@ firebase-tools-cli remote-config:convert config.json --add-conditions
 
 - `firebase-tools-cli query <collection>` - Query a specific collection
   - `-w, --where <field,operator,value>` - Where clause (e.g., "age,>=,18")
+    - Supported operators: `==`, `!=`, `>=`, `<=`, `>`, `<`, `array-contains`, `in`, `not-in`
+    - Values are automatically parsed: `"true"` → boolean, `"123"` → number, `"null"` → null
+    - Examples: `"active,==,true"`, `"age,>=,18"`, `"status,in,active,pending"`
   - `-l, --limit <number>` - Limit number of results
-  - `-o, --order-by <field,direction>` - Order by field (e.g., "name,asc")
-  - `--json` - Output results as JSON
-  - `--output <file>` - Save JSON output to file
+  - `-o, --order-by <field,direction>` - Order by field (e.g., "name,asc" or "age,desc")
+  - `--json` - Output results as JSON format
+  - `--output <file>` - Save JSON output to file (automatically adds .json extension)
 
 ### Realtime Database Operations
 
@@ -88,12 +91,19 @@ firebase-tools-cli remote-config:convert config.json --add-conditions
   - `-b, --batch-size <size>` - Batch size for imports (default: 500)
   - `-m, --merge` - Merge documents instead of overwriting
 
-- `firebase-tools-cli rtdb:query <path>` - Query Realtime Database
-  - `-w, --where <field,operator,value>` - Where clause
+- `firebase-tools-cli rtdb:query [path]` - Query Realtime Database (path defaults to root "/")
+  - `-w, --where <field,operator,value>` - Where clause for filtering
+    - Supported operators: `==`, `>=`, `<=`, `>`, `<` (Firebase RTDB limitations apply)
+    - Values are automatically parsed: `"true"` → boolean, `"123"` → number, `"null"` → null
+    - Examples: `"active,==,true"`, `"age,>=,18"`, `"score,>,85"`
+    - **Note**: Firebase RTDB can't filter and order by different fields in the same query
   - `-l, --limit <number>` - Limit number of results
-  - `-o, --order-by <field,direction>` - Order by field
-  - `--json` - Output results as JSON
-  - `--output <file>` - Save JSON output to file
+    - Applied after post-processing when sorting is required
+  - `-o, --order-by <field,direction>` - Order by field (e.g., "name,asc" or "age,desc")
+    - **Note**: Firebase RTDB object results don't preserve order, so sorting is post-processed
+    - Cannot be combined with filtering on different fields due to Firebase limitations
+  - `--json` - Output results as JSON format
+  - `--output <file>` - Save JSON output to file (automatically adds .json extension)
 
 ### Remote Config Operations
 
@@ -118,6 +128,10 @@ firebase-tools-cli remote-config:convert config.json --add-conditions
 
 - `-s, --service-account <path>` - Path to service account JSON file
 - `-d, --database-url <url>` - Firebase Realtime Database URL
+  - Required for all `rtdb:*` commands
+  - Format: `https://your-project-default-rtdb.firebaseio.com`
+  - Accepts URLs with or without trailing slash
+  - Can be saved during authentication for future use
 
 ## File Formats
 
@@ -158,6 +172,137 @@ The convert command transforms simple JSON into Firebase Remote Config format:
     "version": "1.0.0"
   }
 }
+```
+
+## Query Command Examples
+
+### Firestore Query Examples
+
+```bash
+# Basic collection query
+firebase-tools-cli query users
+
+# Filter by field value
+firebase-tools-cli query users --where "active,==,true"
+firebase-tools-cli query users --where "age,>=,18"
+firebase-tools-cli query users --where "department,==,Engineering"
+
+# Multiple conditions (using array operators)
+firebase-tools-cli query users --where "status,in,active,pending,verified"
+firebase-tools-cli query posts --where "tags,array-contains,javascript"
+
+# Ordering and limiting
+firebase-tools-cli query users --order-by "age,desc" --limit 10
+firebase-tools-cli query posts --order-by "timestamp,desc" --limit 5
+
+# Complex queries with JSON output
+firebase-tools-cli query users --where "score,>,85" --order-by "score,desc" --json
+firebase-tools-cli query products --where "price,<=,100" --limit 20 --output results.json
+
+# Boolean and numeric value parsing
+firebase-tools-cli query users --where "active,==,true"     # boolean true
+firebase-tools-cli query users --where "age,>=,25"         # number 25
+firebase-tools-cli query users --where "status,==,null"    # null value
+```
+
+### Realtime Database Query Examples
+
+```bash
+# Query root path (shows all top-level nodes)
+firebase-tools-cli rtdb:query
+
+# Query specific path
+firebase-tools-cli rtdb:query users
+firebase-tools-cli rtdb:query posts/2023
+
+# Filter by field value
+firebase-tools-cli rtdb:query users --where "active,==,true"
+firebase-tools-cli rtdb:query users --where "age,>=,18"
+firebase-tools-cli rtdb:query products --where "price,<,100"
+
+# Ordering (with Firebase RTDB limitations)
+firebase-tools-cli rtdb:query users --order-by "name,asc"
+firebase-tools-cli rtdb:query posts --order-by "timestamp,desc"
+
+# Limiting results
+firebase-tools-cli rtdb:query users --limit 10
+firebase-tools-cli rtdb:query posts --order-by "timestamp,desc" --limit 5
+
+# JSON output and file saving
+firebase-tools-cli rtdb:query users --json
+firebase-tools-cli rtdb:query products --where "category,==,electronics" --output inventory.json
+
+# Complex path queries
+firebase-tools-cli rtdb:query users/user123/posts
+firebase-tools-cli rtdb:query analytics/daily/2023-12-01
+```
+
+### Query Limitations and Best Practices
+
+#### Firestore Limitations
+
+- Compound queries may require composite indexes
+- `array-contains` only works with single values
+- `in` and `not-in` support up to 10 values
+- Range queries (`>`, `<`, `>=`, `<=`) can only be used on one field per query
+
+#### Firebase RTDB Limitations
+
+- **Cannot filter and order by different fields** in the same query
+- Object results don't preserve Firebase ordering (post-processed by CLI)
+- Limited query operators compared to Firestore
+- Queries are performed at the specified path level
+
+#### Performance Tips
+
+- Use `--limit` to avoid large result sets
+- Combine filtering with ordering when possible
+- Use specific paths in RTDB queries to reduce data transfer
+- Save large results to files using `--output` instead of console display
+
+### Query Troubleshooting
+
+#### Common Error Messages
+
+**"Error: a default value for a required argument is never used"**
+
+- This indicates a CLI configuration issue, not a query problem
+- Try updating to the latest version
+
+**"PERMISSION_DENIED"**
+
+- Check Firebase security rules
+- Verify service account has appropriate permissions
+- Ensure you're authenticated correctly
+
+**"INDEX_NOT_DEFINED" (Firestore)**
+
+- Create required composite indexes in Firebase Console
+- Check the error message for specific index requirements
+
+**"Firebase RTDB limitation: Cannot order by one field and filter by another"**
+
+- This is a Firebase RTDB constraint, not a bug
+- The CLI will post-process results when possible
+- Consider restructuring your data or using Firestore for complex queries
+
+#### Value Parsing Issues
+
+If your query values aren't being parsed correctly:
+
+```bash
+# Strings should be quoted if they contain special characters
+firebase-tools-cli query users --where 'name,==,"John Doe"'
+
+# Numbers are auto-detected
+firebase-tools-cli query users --where "age,>=,25"    # 25 as number
+
+# Booleans use lowercase
+firebase-tools-cli query users --where "active,==,true"   # boolean true
+firebase-tools-cli query users --where "active,==,false"  # boolean false
+
+# Null values
+firebase-tools-cli query users --where "lastLogin,==,null"
 ```
 
 ## Common Workflows
