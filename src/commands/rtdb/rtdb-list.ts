@@ -10,7 +10,7 @@ const rtdbList = rtdbProgram
   .description('List all top-level nodes and their basic info')
   .option('--json', 'Output results as JSON')
   .option('--output <file>', 'Save JSON output to file (use with --json)')
-  .option('--database-url <url>', 'Firebase Realtime Database URL')
+  .option('-d, --database-url <url>', 'Firebase Realtime Database URL')
   .hook('preAction', rtdbValidatePreAction)
   .action(async (options) => {
     try {
