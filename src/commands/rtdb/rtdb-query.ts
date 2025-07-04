@@ -1,11 +1,10 @@
+import { program } from 'commander';
 import * as admin from 'firebase-admin';
 
 import { queryRealtimeDatabase } from '@/actions/rtdb/rtdb-query';
 import { rtdbValidatePreAction } from '@/hooks/rtdb';
 
-import rtdbProgram from './index';
-
-const rtdbQuery = rtdbProgram
+const rtdbQuery = program
   .createCommand('rtdb:query')
   .description('Query a specific path in Realtime Database')
   .argument('[path]', 'Database path to query', '/')
