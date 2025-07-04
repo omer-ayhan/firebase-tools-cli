@@ -16,4 +16,6 @@ tests/
 .eslintrc*
 .prettierrc* 
 
+scripts/
+
 .github/
