@@ -2,13 +2,17 @@ name: Code Quality
 
 on:
   push:
-    branches: [main, development]
+    branches: [development]
   pull_request:
-    branches: [main]
+    branches: [main, development]
+
+permissions:
+  contents: read
 
 jobs:
   lint-and-format:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -16,7 +20,7 @@ jobs:
       - name: Use Node.js 18.x
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies
@@ -31,20 +35,10 @@ jobs:
       - name: Build verification
         run: npm run build
 
-  security-audit:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18.x
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Run security audit
         run: npm audit --audit-level moderate
+
+      - name: Check for unused dependencies
+        run: |
+          # This will help identify unused dependencies
+          npx depcheck --ignores="@types/*,prettier,typescript,esbuild" || echo "Consider reviewing unused dependencies"
