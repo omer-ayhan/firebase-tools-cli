@@ -48,7 +48,7 @@
     "esbuild": "^0.25.5",
     "express": "^4.18.2",
     "firebase-admin": "^12.0.0",
-    "google-auth-library": "^9.0.0",
+    "google-auth-library": "^10.1.0",
     "inquirer": "^8.2.6",
     "open": "^8.4.2"
   },
