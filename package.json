@@ -49,7 +49,7 @@
     "express": "^4.18.2",
     "firebase-admin": "^12.0.0",
     "google-auth-library": "^9.0.0",
-    "inquirer": "^8.2.6",
+    "inquirer": "^12.7.0",
     "open": "^8.4.2"
   },
   "engines": {
