@@ -3,7 +3,6 @@ import { program } from 'commander';
 import login from './commands/auth/login';
 import projectsList from './commands/auth/projects';
 import reset from './commands/auth/reset';
-import docsGetCommand from './commands/docs/docs-get';
 import firestoreExport from './commands/firestore/firestore-export';
 import firestoreImport from './commands/firestore/firestore-import';
 import firestoreList from './commands/firestore/firestore-list';
@@ -36,7 +35,6 @@ program
   .addCommand(login)
   .addCommand(projectsList)
   .addCommand(reset)
-  .addCommand(docsGetCommand)
   // firestore commands
   .addCommand(firestoreList)
   .addCommand(firestoreQuery)

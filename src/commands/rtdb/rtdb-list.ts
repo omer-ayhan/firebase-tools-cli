@@ -1,11 +1,10 @@
+import { program } from 'commander';
 import * as admin from 'firebase-admin';
 
 import { listRealtimeDatabase } from '@/actions/rtdb/rtdb-list';
 import { rtdbValidatePreAction } from '@/hooks/rtdb';
 
-import rtdbProgram from './index';
-
-const rtdbList = rtdbProgram
+const rtdbList = program
   .createCommand('rtdb:list')
   .description('List all top-level nodes and their basic info')
   .option('--json', 'Output results as JSON')

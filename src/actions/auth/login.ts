@@ -257,6 +257,19 @@ async function promptAuthenticationMethod() {
   return authMethod;
 }
 
+async function promptReauthenticateLogin(): Promise<boolean> {
+  const { reauthenticate } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'reauthenticate',
+      message: 'Do you want to re-authenticate?',
+      default: false,
+    },
+  ]);
+
+  return reauthenticate;
+}
+
 // Add this helper function to prompt for service account file
 async function promptServiceAccountFile() {
   const { serviceAccountPath } = await inquirer.prompt([
@@ -308,6 +321,7 @@ function loadCredentials() {
 const loginAction = async (options: LoginActionType) => {
   try {
     const config = loadConfig();
+    let isReauthenticate = false;
 
     if (options.method == 'oauth') {
       console.log(
@@ -332,15 +346,21 @@ const loginAction = async (options: LoginActionType) => {
         );
       }
 
-      console.log(chalk.blue('\n💡 Available options:'));
-      console.log(chalk.gray('   • Use --force to re-authenticate'));
-      console.log(
-        chalk.gray('   • Use "firebase-tools-cli projects" to change project')
-      );
-      console.log(
-        chalk.gray('   • Use "firebase-tools-cli reset" to clear configuration')
-      );
-      return;
+      isReauthenticate = await promptReauthenticateLogin();
+
+      if (!isReauthenticate) {
+        console.log(chalk.blue('\n💡 Available options:'));
+        console.log(chalk.gray('   • Use --force to re-authenticate'));
+        console.log(
+          chalk.gray('   • Use "firebase-tools-cli projects" to change project')
+        );
+        console.log(
+          chalk.gray(
+            '   • Use "firebase-tools-cli reset" to clear configuration'
+          )
+        );
+        return;
+      }
     }
 
     console.log(chalk.blue('🔐 Starting authentication process...\n'));

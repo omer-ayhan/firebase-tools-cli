@@ -15,3 +15,7 @@ tests/
 # Development dependencies
 .eslintrc*
 .prettierrc* 
+
+scripts/
+
+.github/

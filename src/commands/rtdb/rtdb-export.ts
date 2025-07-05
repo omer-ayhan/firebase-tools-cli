@@ -1,11 +1,10 @@
+import { program } from 'commander';
 import * as admin from 'firebase-admin';
 
 import { exportRealtimeDatabase } from '@/actions/rtdb/rtdb-export';
 import { rtdbValidatePreAction } from '@/hooks/rtdb';
 
-import rtdbProgram from './index';
-
-const rtdbExport = rtdbProgram
+const rtdbExport = program
   .createCommand('rtdb:export')
   .description('Export all data from Realtime Database')
   .option('-o, --output <dir>', 'Output directory', './')
