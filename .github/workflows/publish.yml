@@ -1,4 +1,4 @@
-name: Publish to NPM on Release
+name: Publish Firebase Tools CLI to NPM
 
 on:
   release:
