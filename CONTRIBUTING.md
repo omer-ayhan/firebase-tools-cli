@@ -1,67 +1,87 @@
 # Contributing to Firebase Tools CLI
 
-## Commit Convention
+## Release Process
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning and changelog generation.
+This project uses a **manual release process** where maintainers have full control over when and what gets released.
 
-### Commit Format
+### How Releases Work
 
-```
-<type>[optional scope]: <description>
+1. **Development**: Work happens in feature branches and gets merged to `main` via PRs
+2. **Manual Release**: When ready, maintainers create a GitHub release manually
+3. **Automatic Publishing**: GitHub Actions automatically publishes to npm based on the release
 
-[optional body]
+### Creating a Release
 
-[optional footer(s)]
-```
+1. **Go to GitHub Releases**: Navigate to the releases page
+2. **Create new release**: Click "Create a new release"
+3. **Choose tag**: Create a new tag (e.g., `v1.2.3`, `v2.0.0`)
+4. **Write release notes**: Describe what changed in this release
+5. **Publish release**: Click "Publish release"
+6. **Automatic npm publish**: GitHub Actions will automatically:
+   - Run quality checks and tests
+   - Update package.json with the release version
+   - Build the project
+   - Publish to npm
+   - Update the release with npm package info
 
-### Types
+### Version Naming
 
-- **feat**: A new feature (triggers minor version bump)
-- **fix**: A bug fix (triggers patch version bump)
-- **docs**: Documentation only changes
-- **style**: Changes that do not affect the meaning of the code
-- **refactor**: A code change that neither fixes a bug nor adds a feature
-- **perf**: A code change that improves performance
-- **test**: Adding missing tests or correcting existing tests
-- **chore**: Changes to the build process or auxiliary tools
+Use semantic versioning for tags:
 
-### Breaking Changes
-
-Add `BREAKING CHANGE:` in the footer or `!` after the type to trigger a major version bump:
-
-```
-feat!: remove deprecated API
-```
-
-or
-
-```
-feat: add new authentication method
-
-BREAKING CHANGE: The old auth method is no longer supported
-```
+- **Patch** (v1.0.1): Bug fixes, small improvements
+- **Minor** (v1.1.0): New features, backwards compatible
+- **Major** (v2.0.0): Breaking changes
 
 ### Examples
 
-```bash
-# Patch release (0.5.3 -> 0.5.4)
-git commit -m "fix: resolve authentication timeout issue"
-
-# Minor release (0.5.3 -> 0.6.0)
-git commit -m "feat: add new export format for Firestore"
-
-# Major release (0.5.3 -> 1.0.0)
-git commit -m "feat!: redesign CLI interface"
+```
+v1.0.1 - Bug fix release
+v1.1.0 - New feature release
+v2.0.0 - Breaking changes release
 ```
 
-## Automated Publishing
+## Pull Request Strategy
 
-When you merge a PR to the `main` branch:
+### Squash and Merge (Recommended)
 
-1. **Semantic Release** analyzes your commit messages
-2. **Automatically** determines the version bump type
-3. **Updates** package.json and creates a changelog
-4. **Publishes** to npm if there are releasable changes
-5. **Creates** a GitHub release with release notes
+To keep commit history clean:
+
+1. **Enable "Squash and merge"** in your GitHub repository settings
+2. **Disable "Create a merge commit"** and "Rebase and merge"
+3. **Write clear commit message** in the squash commit title
+
+#### Example:
+
+```
+PR Title: Add new Firestore export format
+Multiple commits in PR:
+- WIP: working on export
+- fix typo
+- add tests
+- update docs
+
+Squash commit message: "Add new export format for Firestore"
+```
+
+This way, only ONE commit with a clear message reaches main!
+
+### Branch Protection Rules
+
+Set up branch protection for `main`:
+
+- ✅ Require pull request reviews
+- ✅ Require status checks to pass
+- ✅ Require branches to be up to date
+- ✅ Restrict pushes to main branch
+
+## Development Workflow
+
+1. **Create feature branch** from main
+2. **Make changes** and commit
+3. **Open pull request** to main
+4. **Code review** and approval
+5. **Squash and merge** to main
+6. **When ready for release**: Create GitHub release manually
+7. **Automatic publishing** to npm happens via GitHub Actions
 
 No manual version bumping needed! 🎉
