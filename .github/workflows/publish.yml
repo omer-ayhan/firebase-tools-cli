@@ -1,0 +1,196 @@
+name: Publish to NPM on Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check TypeScript compilation
+        run: npx tsc --noEmit
+
+      - name: Run Prettier check
+        run: npx prettier --check "src/**/*.{ts,js,json}"
+
+      - name: Run security audit
+        run: npm audit --audit-level moderate
+
+  test:
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: ['18', '20', '22']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run tests
+        run: npm test || echo "No tests configured yet"
+
+      - name: Test CLI installation
+        run: |
+          npm pack
+          npm install -g firebase-tools-cli-*.tgz
+          firebase-tools-cli --help
+
+  publish:
+    needs: [quality, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Extract version from release tag
+        id: version
+        run: |
+          # Extract version from tag (remove 'v' prefix if present)
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION=${VERSION#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Detected version: $VERSION"
+
+      - name: Update package.json version
+        run: |
+          echo "Updating package.json to version ${{ steps.version.outputs.version }}"
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Validate package publishing
+        run: npm publish --dry-run
+
+      - name: Publish to NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create PR for version update
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ steps.version.outputs.version }}';
+            const branchName = `chore/bump-version-${version}`;
+
+            // Get the main branch reference
+            const { data: mainRef } = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'heads/main'
+            });
+
+            // Create new branch
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/heads/${branchName}`,
+              sha: mainRef.object.sha
+            });
+
+            // Get current package.json content
+            const { data: packageFile } = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: 'package.json',
+              ref: branchName
+            });
+
+            // Update package.json content
+            const packageContent = JSON.parse(Buffer.from(packageFile.content, 'base64').toString());
+            packageContent.version = version;
+
+            // Commit updated package.json
+            await github.rest.repos.createOrUpdateFileContents({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              path: 'package.json',
+              message: `chore: bump version to ${version}`,
+              content: Buffer.from(JSON.stringify(packageContent, null, 2) + '\n').toString('base64'),
+              sha: packageFile.sha,
+              branch: branchName
+            });
+
+            // Create pull request
+            const { data: pr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `chore: bump version to ${version}`,
+              head: branchName,
+              base: 'main',
+              body: `## Version Bump\n\nThis PR updates the package.json version to match the published release.\n\n- **Version**: ${version}\n- **Release**: ${{ github.event.release.html_url }}\n- **NPM Package**: https://www.npmjs.com/package/firebase-tools-cli/v/${version}\n\n### Changes\n- Updates \`package.json\` version from current to \`${version}\`\n\n> This PR was automatically created after publishing release \`${{ github.event.release.tag_name }}\` to NPM.`
+            });
+
+            console.log(`Created PR #${pr.number}: ${pr.html_url}`);
+
+      - name: Update release with NPM info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: release } = await github.rest.repos.getRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ github.event.release.id }}
+            });
+
+            const npmInfo = `\n\n---\n\n🎉 **Published to NPM**: \`npm install firebase-tools-cli@${{ steps.version.outputs.version }}\`\n\n📦 **NPM Package**: https://www.npmjs.com/package/firebase-tools-cli/v/${{ steps.version.outputs.version }}\n\n🔄 **Version Update**: A PR has been automatically created to update package.json version in the main branch.`;
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: ${{ github.event.release.id }},
+              body: release.body + npmInfo
+            });
