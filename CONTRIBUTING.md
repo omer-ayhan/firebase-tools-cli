@@ -71,12 +71,12 @@ Commit messages should follow [Conventional Commits](https://www.conventionalcom
 
 **Recommended format:** `type(scope)!: subject`
 
-| Field | Details |
-|-------|---------|
-| `type` | Optional: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` |
-| `scope` | Optional: `cli`, `firestore`, `rtdb`, `remote-config`, `auth`, `config`, `release`, `docs`, `deps` |
-| `!` | Optional: marks a breaking change |
-| `subject` | Describe the change (no format enforcement) |
+| Field     | Details                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------ |
+| `type`    | Optional: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` |
+| `scope`   | Optional: `cli`, `firestore`, `rtdb`, `remote-config`, `auth`, `config`, `release`, `docs`, `deps`     |
+| `!`       | Optional: marks a breaking change                                                                      |
+| `subject` | Describe the change (no format enforcement)                                                            |
 
 **Examples:**
 
