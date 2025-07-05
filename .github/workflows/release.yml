@@ -1,10 +1,7 @@
-name: Deploy Firebase Tools CLI
+name: Release
 
 on:
   push:
-    branches: [main]
-    tags: ['v*']
-  pull_request:
     branches: [main]
 
 permissions:
@@ -73,14 +70,17 @@ jobs:
           npm install -g firebase-tools-cli-*.tgz
           firebase-tools-cli --help
 
-  publish:
+  release:
     needs: [quality, test]
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v4
@@ -95,18 +95,11 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Publish to NPM
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Validate package publishing
+        run: npm publish --dry-run
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          generate_release_notes: true
-          draft: false
-          prerelease: false
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
