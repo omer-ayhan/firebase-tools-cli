@@ -1,4 +1,4 @@
-import * as admin from "firebase-admin";
+import * as admin from 'firebase-admin';
 
 export type QueryDocumentSnapshotType = admin.firestore.QueryDocumentSnapshot<
   admin.firestore.DocumentData,
