@@ -1,422 +1,158 @@
-# firebase-tools-cli
+# Firebase Tools CLI
 
 [![NPM version][npm-image]][npm-url]
 [![License][license-image]][license-url]
 [![Node Version][node-badge]][npm]
 [![NPM version][npm-badge]][npm]
 
-> CLI tool for Firebase to manage Firestore, Remote Config, and Realtime Database
+The Firebase Tools CLI is a command-line interface for managing Firebase services including Firestore, Realtime Database, and Remote Config. It provides powerful tools to export, import, query, and manage your Firebase data from the command line.
+
+- Export/Import data from Firestore and Realtime Database
+- Query collections and documents with advanced filtering
+- Convert JSON files to Firebase Remote Config format
+- Manage authentication and project settings
+- Batch operations with customizable batch sizes
+
+To get started with Firebase Tools CLI, read the full list of commands below or check out the [documentation](https://github.com/omer-ayhan/firebase-tools-cli#readme).
 
 ## Installation
+
+### Node Package
+
+You can install Firebase Tools CLI using npm (the Node Package Manager). Note that you will need to install [Node.js](http://nodejs.org/) and [npm](https://npmjs.org/). Installing Node.js should install npm as well.
+
+To download and install Firebase Tools CLI run the following command:
 
 ```bash
 npm install -g firebase-tools-cli
 ```
 
-## Setup
-
-1. Generate a service account from within the settings section of the Firebase console
-2. Save the service account to `serviceAccountKey.json` within your firebase project repo (or set `SERVICE_ACCOUNT` environment variable)
-3. Make sure you add `serviceAccountKey.json` to your `.gitignore` so it is not committed as part of your changes - **THIS IS EXTREMELY IMPORTANT**
-
-## Usage
-
-firebase-tools-cli should be used the same way that [firebase-tools](https://github.com/firebase/firebase-tools) is used - the API is as close to the same as possible:
-
-```bash
-# Export all collections
-firebase-tools-cli export --limit-to-last 10 /users
-
-# Import data
-firebase-tools-cli import ./data.json
-
-# Query collections
-firebase-tools-cli query users --where "age,>=,18" --limit 10
-
-# List collections
-firebase-tools-cli list
-
-# Remote Config operations
-firebase-tools-cli remote-config:convert config.json --add-conditions
-```
+This will provide you with the globally accessible `firebase-tools-cli` command.
 
 ## Commands
 
-### Authentication
+**The command `firebase-tools-cli --help` lists the available commands and `firebase-tools-cli <command> --help` shows more details for an individual command.**
 
-- `firebase-tools-cli login` - Interactive authentication setup
-  - `--force` - Force re-authentication
-- `firebase-tools-cli reset` - Reset configuration and credentials
-  - `--config-only` - Reset only configuration
-  - `--credentials-only` - Reset only credentials
+If a command is project-specific, you must have either a valid Firebase service account key file
 
-### Firestore Operations
+Below is a brief list of the available commands and their function:
 
-- `firebase-tools-cli export` - Export all collections
+### Authentication Commands
 
-  - `-o, --output <dir>` - Output directory (default: ./)
-  - `--no-detailed` - Skip detailed format export
-  - `--no-importable` - Skip importable format export
-  - `--no-subcollections` - Skip subcollections
-  - `-e, --exclude <collections...>` - Exclude specific collections
+| Command      | Description                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| **login**    | Authenticate with service account key file.                                                |
+| **projects** | List available projects and manage default project settings.                               |
+| **reset**    | Reset all configuration and credentials. Options to reset config-only or credentials-only. |
 
-- `firebase-tools-cli import <file>` - Import data from JSON file
+### Firestore Commands
 
-  - `-b, --batch-size <size>` - Batch size for imports (default: 500)
-  - `-m, --merge` - Merge documents instead of overwriting
-  - `-e, --exclude <collections...>` - Exclude specific collections
+| Command              | Description                                                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **firestore:export** | Export all collections from Firestore. Supports detailed and importable formats with subcollection handling.        |
+| **firestore:import** | Import data to Firestore from JSON file. Supports batch operations and merge functionality.                         |
+| **firestore:list**   | List all collections and their basic information from the current project's Firestore database.                     |
+| **firestore:query**  | Query a collection or fetch a specific document. Supports advanced filtering, ordering, and field-specific queries. |
 
-- `firebase-tools-cli query <collection>` - Query a specific collection
-  - `-w, --where <field,operator,value>` - Where clause (e.g., "age,>=,18")
-    - Supported operators: `==`, `!=`, `>=`, `<=`, `>`, `<`, `array-contains`, `in`, `not-in`
-    - Values are automatically parsed: `"true"` → boolean, `"123"` → number, `"null"` → null
-    - Examples: `"active,==,true"`, `"age,>=,18"`, `"status,in,active,pending"`
-  - `-l, --limit <number>` - Limit number of results
-  - `-o, --order-by <field,direction>` - Order by field (e.g., "name,asc" or "age,desc")
-  - `--json` - Output results as JSON format
-  - `--output <file>` - Save JSON output to file (automatically adds .json extension)
+### Realtime Database Commands
 
-### Realtime Database Operations
+| Command         | Description                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------- |
+| **rtdb:export** | Export all data from Realtime Database. Supports detailed and importable formats with exclusion options.    |
+| **rtdb:import** | Import data to Realtime Database from JSON file. Supports batch operations and merge functionality.         |
+| **rtdb:list**   | List all top-level nodes and their basic information from the current project's Realtime Database.          |
+| **rtdb:query**  | Query a specific path in Realtime Database. Supports filtering, ordering, and JSON output with file saving. |
 
-- `firebase-tools-cli rtdb:export` - Export all data from Realtime Database
+### Remote Config Commands
 
-  - `-o, --output <dir>` - Output directory (default: ./)
-  - `--no-detailed` - Skip detailed format export
-  - `--no-importable` - Skip importable format export
-  - `--no-subcollections` - Skip nested data
-  - `-e, --exclude <paths...>` - Exclude specific paths
+| Command                   | Description                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| **remote-config:convert** | Convert JSON file to Firebase Remote Config format. Supports templates and condition generation. |
 
-- `firebase-tools-cli rtdb:import <file>` - Import data to Realtime Database
+## Authentication
 
-  - `-b, --batch-size <size>` - Batch size for imports (default: 500)
-  - `-m, --merge` - Merge documents instead of overwriting
+### General
 
-- `firebase-tools-cli rtdb:query [path]` - Query Realtime Database (path defaults to root "/")
-  - `-w, --where <field,operator,value>` - Where clause for filtering
-    - Supported operators: `==`, `>=`, `<=`, `>`, `<` (Firebase RTDB limitations apply)
-    - Values are automatically parsed: `"true"` → boolean, `"123"` → number, `"null"` → null
-    - Examples: `"active,==,true"`, `"age,>=,18"`, `"score,>,85"`
-    - **Note**: Firebase RTDB can't filter and order by different fields in the same query
-  - `-l, --limit <number>` - Limit number of results
-    - Applied after post-processing when sorting is required
-  - `-o, --order-by <field,direction>` - Order by field (e.g., "name,asc" or "age,desc")
-    - **Note**: Firebase RTDB object results don't preserve order, so sorting is post-processed
-    - Cannot be combined with filtering on different fields due to Firebase limitations
-  - `--json` - Output results as JSON format
-  - `--output <file>` - Save JSON output to file (automatically adds .json extension)
+The Firebase Tools CLI currently only supports one authentication method:
 
-### Remote Config Operations
+- **Service Account** - set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to the path of a JSON service account key file. For more details, see Google Cloud's [Getting started with authentication](https://cloud.google.com/docs/authentication/getting-started) guide.
 
-- `firebase-tools-cli remote-config:convert <file>` - Convert JSON to Remote Config format
-  - `-o, --output <file>` - Output file name
-  - `--version-number <number>` - Version number (default: "1")
-  - `--user-email <email>` - User email for version info
-  - `--description <text>` - Description prefix for parameters
-  - `--add-conditions` - Add default iOS/Android conditions
-  - `--template <type>` - Use predefined template (basic|mobile|web)
+### Multiple Projects
 
-### Management
+By default the CLI can work with multiple Firebase projects. Use `firebase-tools-cli projects` to list available projects and set a default project for easier command execution.
 
-- `firebase-tools-cli list` - List all collections with basic info
-- `firebase-tools-cli projects` - Manage projects
-  - `--set-default <project>` - Set default project
-  - `--clear-default` - Clear default project
-- `firebase-tools-cli docs` - Print or save documentation
-  - `--save <file>` - Save documentation to file
+To set the default project for a specific directory, run `firebase-tools-cli projects --set-default <project-id>` from within the directory.
 
-### Global Options
+To clear the default project setting, run `firebase-tools-cli projects --clear-default`.
 
-- `-s, --service-account <path>` - Path to service account JSON file
-- `-d, --database-url <url>` - Firebase Realtime Database URL
-  - Required for all `rtdb:*` commands
-  - Format: `https://your-project-default-rtdb.firebaseio.com`
-  - Accepts URLs with or without trailing slash
-  - Can be saved during authentication for future use
+## Examples
 
-## File Formats
-
-### Export Formats
-
-1. **Detailed Format**: Complete document metadata including timestamps and subcollections
-2. **Importable Format**: Simplified structure optimized for re-importing
-
-### Import Format
-
-JSON structure with collections as top-level keys:
-
-```json
-{
-  "users": {
-    "user1": { "name": "John", "age": 30 },
-    "user2": { "name": "Jane", "age": 25 }
-  },
-  "posts": {
-    "post1": { "title": "Hello", "content": "World" }
-  }
-}
-```
-
-### Remote Config Format
-
-The convert command transforms simple JSON into Firebase Remote Config format:
-
-**Input JSON:**
-
-```json
-{
-  "appName": "My App",
-  "maxUsers": 100,
-  "isFeatureEnabled": true,
-  "config": {
-    "theme": "dark",
-    "version": "1.0.0"
-  }
-}
-```
-
-## Query Command Examples
-
-### Firestore Query Examples
+### Export and Import Workflow
 
 ```bash
-# Basic collection query
-firebase-tools-cli query users
+# Export Firestore data
+firebase-tools-cli firestore:export --output ./backup-$(date +%Y%m%d)/
 
-# Filter by field value
-firebase-tools-cli query users --where "active,==,true"
-firebase-tools-cli query users --where "age,>=,18"
-firebase-tools-cli query users --where "department,==,Engineering"
+# Import data to another project
+firebase-tools-cli firestore:import ./backup-20231201/firestore-export.json
 
-# Multiple conditions (using array operators)
-firebase-tools-cli query users --where "status,in,active,pending,verified"
-firebase-tools-cli query posts --where "tags,array-contains,javascript"
+# Export Realtime Database
+firebase-tools-cli rtdb:export --database-url https://source-project-rtdb.firebaseio.com/ --output ./rtdb-backup/
 
-# Ordering and limiting
-firebase-tools-cli query users --order-by "age,desc" --limit 10
-firebase-tools-cli query posts --order-by "timestamp,desc" --limit 5
-
-# Complex queries with JSON output
-firebase-tools-cli query users --where "score,>,85" --order-by "score,desc" --json
-firebase-tools-cli query products --where "price,<=,100" --limit 20 --output results.json
-
-# Boolean and numeric value parsing
-firebase-tools-cli query users --where "active,==,true"     # boolean true
-firebase-tools-cli query users --where "age,>=,25"         # number 25
-firebase-tools-cli query users --where "status,==,null"    # null value
+# Import to target database
+firebase-tools-cli rtdb:import ./rtdb-backup/rtdb-export.json --database-url https://target-project-rtdb.firebaseio.com/
 ```
 
-### Realtime Database Query Examples
+### Advanced Querying
 
 ```bash
-# Query root path (shows all top-level nodes)
-firebase-tools-cli rtdb:query
+# Query Firestore collections with conditions
+firebase-tools-cli firestore:query users --where "age,>=,18" --limit 10
+firebase-tools-cli firestore:query users --order-by "name,asc"
 
-# Query specific path
-firebase-tools-cli rtdb:query users
-firebase-tools-cli rtdb:query posts/2023
+# Query specific document fields
+firebase-tools-cli firestore:query users user1 --field profile.settings
 
-# Filter by field value
-firebase-tools-cli rtdb:query users --where "active,==,true"
-firebase-tools-cli rtdb:query users --where "age,>=,18"
-firebase-tools-cli rtdb:query products --where "price,<,100"
-
-# Ordering (with Firebase RTDB limitations)
-firebase-tools-cli rtdb:query users --order-by "name,asc"
-firebase-tools-cli rtdb:query posts --order-by "timestamp,desc"
-
-# Limiting results
-firebase-tools-cli rtdb:query users --limit 10
-firebase-tools-cli rtdb:query posts --order-by "timestamp,desc" --limit 5
-
-# JSON output and file saving
-firebase-tools-cli rtdb:query users --json
-firebase-tools-cli rtdb:query products --where "category,==,electronics" --output inventory.json
-
-# Complex path queries
-firebase-tools-cli rtdb:query users/user123/posts
-firebase-tools-cli rtdb:query analytics/daily/2023-12-01
+# Query Realtime Database with filtering
+firebase-tools-cli rtdb:query users --where "age,>=,18" --limit 10 --database-url https://my-project-rtdb.firebaseio.com/
+firebase-tools-cli rtdb:query posts --order-by "timestamp,desc" --json --output results.json
 ```
-
-### Query Limitations and Best Practices
-
-#### Firestore Limitations
-
-- Compound queries may require composite indexes
-- `array-contains` only works with single values
-- `in` and `not-in` support up to 10 values
-- Range queries (`>`, `<`, `>=`, `<=`) can only be used on one field per query
-
-#### Firebase RTDB Limitations
-
-- **Cannot filter and order by different fields** in the same query
-- Object results don't preserve Firebase ordering (post-processed by CLI)
-- Limited query operators compared to Firestore
-- Queries are performed at the specified path level
-
-#### Performance Tips
-
-- Use `--limit` to avoid large result sets
-- Combine filtering with ordering when possible
-- Use specific paths in RTDB queries to reduce data transfer
-- Save large results to files using `--output` instead of console display
-
-### Query Troubleshooting
-
-#### Common Error Messages
-
-**"Error: a default value for a required argument is never used"**
-
-- This indicates a CLI configuration issue, not a query problem
-- Try updating to the latest version
-
-**"PERMISSION_DENIED"**
-
-- Check Firebase security rules
-- Verify service account has appropriate permissions
-- Ensure you're authenticated correctly
-
-**"INDEX_NOT_DEFINED" (Firestore)**
-
-- Create required composite indexes in Firebase Console
-- Check the error message for specific index requirements
-
-**"Firebase RTDB limitation: Cannot order by one field and filter by another"**
-
-- This is a Firebase RTDB constraint, not a bug
-- The CLI will post-process results when possible
-- Consider restructuring your data or using Firestore for complex queries
-
-#### Value Parsing Issues
-
-If your query values aren't being parsed correctly:
-
-```bash
-# Strings should be quoted if they contain special characters
-firebase-tools-cli query users --where 'name,==,"John Doe"'
-
-# Numbers are auto-detected
-firebase-tools-cli query users --where "age,>=,25"    # 25 as number
-
-# Booleans use lowercase
-firebase-tools-cli query users --where "active,==,true"   # boolean true
-firebase-tools-cli query users --where "active,==,false"  # boolean false
-
-# Null values
-firebase-tools-cli query users --where "lastLogin,==,null"
-```
-
-## Common Workflows
-
-### Initial Setup
-
-1. `firebase-tools-cli login` - Authenticate and select default project
-2. `firebase-tools-cli list` - Verify connection and see collections
-
-### Backup and Restore
-
-1. `firebase-tools-cli export -o ./backups` - Create backup
-2. `firebase-tools-cli import ./backups/firestore_export.json` - Restore from backup
-
-### Data Migration
-
-1. `firebase-tools-cli --project old-project export -o ./migration`
-2. `firebase-tools-cli --project new-project import ./migration/firestore_export.json`
 
 ### Remote Config Management
 
-1. `firebase-tools-cli remote-config:convert config.json --add-conditions`
-2. Review and upload the generated Remote Config file
+```bash
+# Convert app config to Remote Config format
+firebase-tools-cli remote-config:convert app-config.json --template mobile --add-conditions
 
-## Security Notes
+# Convert with custom settings
+firebase-tools-cli remote-config:convert config.json --version-number 2 --user-email admin@example.com --description "Production config"
+```
 
-- OAuth tokens are automatically refreshed
-- Service account keys should be kept secure
-- Use IAM roles with minimal required permissions
-- Credentials are stored in user home directory
-- Remote Config parameters are public - avoid sensitive data
+## Requirements
 
-## Performance Tips
+- Node.js >= 18.0.0
+- Valid Firebase project with appropriate permissions
+- Service account key
 
-- Use `--exclude` to skip large collections during export
-- Adjust `--batch-size` based on document size and network
-- Use `--limit` for large query results
-- Enable `--no-subcollections` for faster exports when not needed
-- Keep Remote Config parameters under 1MB total size
+## Contributing
+
+We welcome contributions to Firebase Tools CLI! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute.
 
 ## License
 
-MIT © [Omer Ayhan](https://github.com/omer-ayhan)
+Firebase Tools CLI is licensed under the [MIT License](LICENSE.txt).
 
-```bash
-firebase-tools-cli --help
-# or
-firebase-tools-cli -h
-```
+## Support
 
-### **Command-Specific Help:**
+- **Issues**: Report bugs and request features on [GitHub Issues](https://github.com/omer-ayhan/firebase-tools-cli/issues)
+- **Documentation**: Full documentation available in the [repository](https://github.com/omer-ayhan/firebase-tools-cli)
+- **Author**: [Omer Ayhan](https://github.com/omer-ayhan)
 
-```bash
-firebase-tools-cli export --help
-firebase-tools-cli import --help
-firebase-tools-cli list --help
-firebase-tools-cli query --help
-```
+## Contributors
 
-### **Version:**
-
-```bash
-firebase-tools-cli --version
-# or
-firebase-tools-cli -V
-```
-
-## 📋 Sample Help Output
-
-When you run `firebase-tools-cli --help`, you'll see:
-
-```
-Usage: firebase-tools-cli [options] [command]
-
-CLI tool for Firestore database operations
-
-Options:
-  -V, --version                    display version number
-  -s, --service-account <path>     Path to service account JSON file (default: "./serviceAccountKey.json")
-  -d, --database-url <url>         Firebase database URL
-  -h, --help                       display help for command
-
-Commands:
-  export [options]                 Export all collections from Firestore
-  import [options] <file>          Import data to Firestore from JSON file
-  list                            List all collections and their basic info
-  query [options] <collection>     Query a specific collection
-  help [command]                   display help for command
-```
-
-And for specific commands like `firebase-tools-cli export --help`:
-
-```
-Usage: firebase-tools-cli export [options]
-
-Export all collections from Firestore
-
-Options:
-  -o, --output <dir>              Output directory (default: "./")
-  --no-detailed                   Skip detailed format export
-  --no-importable                 Skip importable format export
-  --no-subcollections             Skip subcollections
-  -e, --exclude <collections...>  Exclude specific collections
-  -h, --help                      display help for command
-```
-
-## 🔧 Additional Help Features
-
-The CLI also includes:
-
-- **Command suggestions** if you mistype a command
-- **Required argument validation** with helpful error messages
-- **Option validation** with clear error descriptions
-- **Usage examples** in error messages
+<a href="https://github.com/omer-ayhan/firebase-tools-cli/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=omer-ayhan/firebase-tools-cli" />
+</a>
 
 [npm-image]: https://img.shields.io/npm/v/firebase-tools-cli.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/firebase-tools-cli

@@ -1,87 +1,125 @@
 # Contributing to Firebase Tools CLI
 
-## Release Process
+Thank you for your interest in contributing to Firebase Tools CLI! This guide will help you get started with contributing to the project.
 
-This project uses a **manual release process** where maintainers have full control over when and what gets released.
+## Getting Started
 
-### How Releases Work
+### Prerequisites
 
-1. **Development**: Work happens in feature branches and gets merged to `main` via PRs
-2. **Manual Release**: When ready, maintainers create a GitHub release manually
-3. **Automatic Publishing**: GitHub Actions automatically publishes to npm based on the release
+- Node.js (version 18 or higher)
+- npm or yarn
 
-### Creating a Release
+### Setting Up Your Development Environment
 
-1. **Go to GitHub Releases**: Navigate to the releases page
-2. **Create new release**: Click "Create a new release"
-3. **Choose tag**: Create a new tag (e.g., `v1.2.3`, `v2.0.0`)
-4. **Write release notes**: Describe what changed in this release
-5. **Publish release**: Click "Publish release"
-6. **Automatic npm publish**: GitHub Actions will automatically:
-   - Run quality checks and tests
-   - Update package.json with the release version
-   - Build the project
-   - Publish to npm
-   - Update the release with npm package info
+1. **Fork the repository** on GitHub
+2. **Clone your fork** to your local machine:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/firebase-tools-cli.git
+   cd firebase-tools-cli
+   ```
+3. **Install dependencies**:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+4. **Create a new branch** for your feature or fix:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-### Version Naming
+## Making Changes
 
-Use semantic versioning for tags:
+### Code Style
 
-- **Patch** (v1.0.1): Bug fixes, small improvements
-- **Minor** (v1.1.0): New features, backwards compatible
-- **Major** (v2.0.0): Breaking changes
+- Follow the existing code style and conventions
+- Use TypeScript for all new code
+- Add appropriate type annotations
+- Write clear, descriptive variable and function names
 
-### Examples
+### Testing
 
-```
-v1.0.1 - Bug fix release
-v1.1.0 - New feature release
-v2.0.0 - Breaking changes release
-```
+- Add tests for new features or bug fixes
+- Ensure all existing tests pass before submitting
+- Run tests with: `npm test`
 
-## Pull Request Strategy
+### Documentation
 
-### Squash and Merge (Recommended)
+- Update documentation if your changes affect user-facing functionality
+- Add JSDoc comments for new functions and classes
+- Update README.md if needed
 
-To keep commit history clean:
+## Submitting Your Changes
 
-1. **Enable "Squash and merge"** in your GitHub repository settings
-2. **Disable "Create a merge commit"** and "Rebase and merge"
-3. **Write clear commit message** in the squash commit title
+### Before You Submit
 
-#### Example:
+1. **Test your changes** thoroughly
+2. **Run the linter** to check for code style issues
+3. **Make sure all tests pass**
+4. **Update documentation** if necessary
 
-```
-PR Title: Add new Firestore export format
-Multiple commits in PR:
-- WIP: working on export
-- fix typo
-- add tests
-- update docs
+### Creating a Pull Request
 
-Squash commit message: "Add new export format for Firestore"
-```
+1. **Conventional commits** for your commit messages. For details, see [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
-This way, only ONE commit with a clear message reaches main!
+2. **Conventional branch names** for your branch names. For details, see [Conventional Branches](https://conventional-branch.github.io/). For example, `feat/add-new-feature` or `bugfix/fix-123`.
 
-### Branch Protection Rules
+3. **Push your branch** to your fork:
 
-Set up branch protection for `main`:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
-- ✅ Require pull request reviews
-- ✅ Require status checks to pass
-- ✅ Require branches to be up to date
-- ✅ Restrict pushes to main branch
+4. **Create a pull request** on GitHub:
 
-## Development Workflow
+   - Go to the main repository
+   - Click "New Pull Request"
+   - Select your branch
+   - Fill out the pull request template
 
-1. **Create feature branch** from main
-2. **Make changes** and commit
-3. **Open pull request** to main
-4. **Code review** and approval
-5. **Squash and merge** to main
-6. **When ready for release**: Create GitHub release manually
-7. **Automatic publishing** to npm happens via GitHub Actions
+5. **Write a clear description** that includes:
+   - What changes you made
+   - Why you made them
+   - Any relevant issue numbers (e.g., "Fixes #123")
 
-No manual version bumping needed! 🎉
+### Pull Request Guidelines
+
+- **One feature per PR**: Keep pull requests focused on a single feature or fix
+- **Clear title**: Use a descriptive title that explains what the PR does
+- **Detailed description**: Explain the changes and why they're needed
+- **Link issues**: Reference any related issues in your description. Non-issue PRs will not be merged.
+
+## Code Review Process
+
+1. **Maintainers will review** your pull request
+2. **Address feedback** if requested
+3. **Make changes** by pushing new commits to your branch
+4. **Once approved**, maintainers will merge your PR
+
+## Types of Contributions
+
+We welcome various types of contributions:
+
+- **Bug fixes**: Help us fix issues and improve stability
+- **New features**: Add new functionality to the CLI
+- **Documentation**: Improve guides, examples, and API docs
+- **Testing**: Add or improve test coverage
+- **Performance**: Optimize existing code
+
+## Getting Help
+
+If you need help or have questions:
+
+- **Check existing issues** on GitHub
+- **Open a new issue** if you find a bug or want to suggest a feature
+- **Join discussions** in existing issues and pull requests
+
+## Code of Conduct
+
+Please be respectful and constructive in all interactions. We're all here to make this project better!
+
+## Questions?
+
+If you have any questions about contributing, feel free to open an issue or reach out to the maintainers.
+
+Thank you for contributing! 🚀
