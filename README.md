@@ -4,6 +4,7 @@
 [![License][license-image]][license-url]
 [![Node Version][node-badge]][npm]
 [![NPM version][npm-badge]][npm]
+[![Bun compatible][bun-badge]][bun-url]
 
 The Firebase Tools CLI is a command-line interface for managing Firebase services including Firestore, Realtime Database, and Remote Config. It provides powerful tools to export, import, query, and manage your Firebase data from the command line.
 
@@ -29,6 +30,22 @@ npm install -g firebase-tools-cli
 
 This will provide you with the globally accessible `firebase-tools-cli` command.
 
+### Bun
+
+Firebase Tools CLI also supports [Bun](https://bun.sh/) (>=1.0.0) as a runtime. You can install it globally using Bun's package manager:
+
+```bash
+bun install -g firebase-tools-cli
+```
+
+Or run commands directly with Bun after a local install:
+
+```bash
+bun run firebase-tools-cli --help
+```
+
+> **Note:** Core features are expected to be compatible with Bun. Some interactive prompts that rely on Node.js-specific stdin handling may behave slightly differently under Bun. If you encounter issues, please [open an issue](https://github.com/omer-ayhan/firebase-tools-cli/issues).
+
 ## Commands
 
 **The command `firebase-tools-cli --help` lists the available commands and `firebase-tools-cli <command> --help` shows more details for an individual command.**
@@ -49,19 +66,19 @@ Below is a brief list of the available commands and their function:
 
 | Command              | Description                                                                                                         |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **firestore:export** | Export all collections from Firestore. Supports detailed and importable formats with subcollection handling.        |
+| **firestore:export** | Export all collections from Firestore to a single compact importable JSON file (`firestore_export.json`). Supports subcollection handling and collection exclusions. |
 | **firestore:import** | Import data to Firestore from JSON file. Supports batch operations and merge functionality.                         |
 | **firestore:list**   | List all collections and their basic information from the current project's Firestore database.                     |
-| **firestore:query**  | Query a collection or fetch a specific document. Supports advanced filtering, ordering, and field-specific queries. |
+| **firestore:query**  | Query a collection or fetch a specific document. Supports subcollection paths (e.g., `users user1 orders`), collection group queries (`--collection-group`), advanced filtering, ordering, and field-specific queries. |
 
 ### Realtime Database Commands
 
 | Command         | Description                                                                                                 |
 | --------------- | ----------------------------------------------------------------------------------------------------------- |
-| **rtdb:export** | Export all data from Realtime Database. Supports detailed and importable formats with exclusion options.    |
+| **rtdb:export** | Export all data from Realtime Database to a single compact importable JSON file (`rtdb_export.json`). Supports exclusion options and top-level-only export. |
 | **rtdb:import** | Import data to Realtime Database from JSON file. Supports batch operations and merge functionality.         |
 | **rtdb:list**   | List all top-level nodes and their basic information from the current project's Realtime Database.          |
-| **rtdb:query**  | Query a specific path in Realtime Database. Supports filtering, ordering, and JSON output with file saving. |
+| **rtdb:query**  | Query a specific path in Realtime Database. Supports deep nested paths (e.g., `/root/a/b/c`), nested field filters (`field/subfield,==,value`), ordering, and JSON output with file saving. |
 
 ### Remote Config Commands
 
@@ -94,13 +111,13 @@ To clear the default project setting, run `firebase-tools-cli projects --clear-d
 firebase-tools-cli firestore:export --output ./backup-$(date +%Y%m%d)/
 
 # Import data to another project
-firebase-tools-cli firestore:import ./backup-20231201/firestore-export.json
+firebase-tools-cli firestore:import ./backup-20231201/firestore_export.json
 
 # Export Realtime Database
 firebase-tools-cli rtdb:export --database-url https://source-project-rtdb.firebaseio.com/ --output ./rtdb-backup/
 
 # Import to target database
-firebase-tools-cli rtdb:import ./rtdb-backup/rtdb-export.json --database-url https://target-project-rtdb.firebaseio.com/
+firebase-tools-cli rtdb:import ./rtdb-backup/rtdb_export.json --database-url https://target-project-rtdb.firebaseio.com/
 ```
 
 ### Advanced Querying
@@ -110,12 +127,29 @@ firebase-tools-cli rtdb:import ./rtdb-backup/rtdb-export.json --database-url htt
 firebase-tools-cli firestore:query users --where "age,>=,18" --limit 10
 firebase-tools-cli firestore:query users --order-by "name,asc"
 
+# Query Firestore subcollections (nested paths)
+firebase-tools-cli firestore:query users user1 orders
+firebase-tools-cli firestore:query users user1 orders --where "status,==,shipped" --limit 5
+firebase-tools-cli firestore:query users user1 orders order1
+
+# Query Firestore collection groups (all subcollections with the same name)
+firebase-tools-cli firestore:query orders --collection-group
+firebase-tools-cli firestore:query orders --collection-group --where "status,==,shipped" --limit 20
+
 # Query specific document fields
 firebase-tools-cli firestore:query users user1 --field profile.settings
 
 # Query Realtime Database with filtering
 firebase-tools-cli rtdb:query users --where "age,>=,18" --limit 10 --database-url https://my-project-rtdb.firebaseio.com/
 firebase-tools-cli rtdb:query posts --order-by "timestamp,desc" --json --output results.json
+
+# Query Realtime Database at a nested path
+firebase-tools-cli rtdb:query users/user4/active --database-url https://my-project-rtdb.firebaseio.com/
+firebase-tools-cli rtdb:query users user4 active --database-url https://my-project-rtdb.firebaseio.com/
+
+# Query Realtime Database with nested field filters
+firebase-tools-cli rtdb:query users --where "workouts/appVersion,==,2.3.1" --database-url https://my-project-rtdb.firebaseio.com/
+firebase-tools-cli rtdb:query workouts --where "settings/difficulty,>=,3" --order-by "settings/duration,desc" --database-url https://my-project-rtdb.firebaseio.com/
 ```
 
 ### Remote Config Management
@@ -130,7 +164,7 @@ firebase-tools-cli remote-config:convert config.json --version-number 2 --user-e
 
 ## Requirements
 
-- Node.js >= 18.0.0
+- Node.js >= 18.0.0 **or** Bun >= 1.0.0
 - Valid Firebase project with appropriate permissions
 - Service account key
 
@@ -161,3 +195,5 @@ Firebase Tools CLI is licensed under the [MIT License](LICENSE.txt).
 [node-badge]: https://img.shields.io/node/v/firebase-tools-cli.svg
 [npm]: https://www.npmjs.com/package/firebase-tools-cli
 [npm-badge]: https://img.shields.io/npm/v/firebase-tools-cli.svg
+[bun-badge]: https://img.shields.io/badge/bun-%3E%3D1.0.0-black?logo=bun
+[bun-url]: https://bun.sh

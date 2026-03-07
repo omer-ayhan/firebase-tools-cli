@@ -9,6 +9,15 @@ import path from 'path';
 import { CREDENTIALS_FILE, OAUTH_CONFIG } from '@/constants';
 import { loadConfig, saveConfig, saveCredentials } from '@/utils';
 
+function escapeHtml(value: unknown): string {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 interface ErrorWithCode extends Error {
   code?: string;
 }
@@ -56,9 +65,9 @@ async function authenticateWithOAuth(): Promise<Credentials> {
       if (error) {
         const errorMsg = error_description || error;
         res.send(`
-            <h1>❌ Authentication Error</h1>
-            <p><strong>Error:</strong> ${error}</p>
-            <p><strong>Description:</strong> ${errorMsg}</p>
+            <h1>&#10060; Authentication Error</h1>
+            <p><strong>Error:</strong> ${escapeHtml(error)}</p>
+            <p><strong>Description:</strong> ${escapeHtml(errorMsg)}</p>
             <p>Please check the console for troubleshooting steps.</p>
           `);
         server.close();
@@ -133,8 +142,8 @@ async function authenticateWithOAuth(): Promise<Credentials> {
 
         console.error('Token exchange error:', errorMessage);
         res.send(`
-            <h1>❌ Authentication Failed</h1>
-            <p><strong>Error:</strong> ${errorMessage}</p>
+            <h1>&#10060; Authentication Failed</h1>
+            <p><strong>Error:</strong> ${escapeHtml(errorMessage)}</p>
             <p>Please check the console for more details.</p>
           `);
         server.close();
@@ -278,26 +287,32 @@ async function promptServiceAccountFile() {
       name: 'serviceAccountPath',
       message: 'Enter path to service account JSON file:',
       filter: (input) => {
-        const path = input.trim();
+        const filePath = input.trim();
 
-        if (!path) {
+        if (!filePath) {
           throw new Error('Please enter a valid file path');
         }
 
-        if (!fs.existsSync(path)) {
-          throw new Error(`File not found: ${path}`);
+        if (!fs.existsSync(filePath)) {
+          throw new Error(`File not found: ${filePath}`);
         }
 
+        let content: unknown;
         try {
-          const content = JSON.parse(fs.readFileSync(input.trim(), 'utf8'));
-          if (!content.type || content.type !== 'service_account') {
-            throw new Error('Invalid service account file format');
-          }
-        } catch (error) {
+          content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        } catch {
           throw new Error('Invalid JSON file');
         }
+        if (
+          typeof content !== 'object' ||
+          content === null ||
+          Array.isArray(content) ||
+          (content as Record<string, unknown>).type !== 'service_account'
+        ) {
+          throw new Error('Invalid service account file format');
+        }
 
-        return path;
+        return filePath;
       },
     },
   ]);
@@ -369,7 +384,9 @@ const loginAction = async (options: LoginActionType) => {
     console.log(chalk.blue('🔑 Service Account Authentication\n'));
     const serviceAccountPath = await promptServiceAccountFile();
 
-    const serviceAccount = require(path.resolve(serviceAccountPath));
+    const serviceAccount = JSON.parse(
+      fs.readFileSync(path.resolve(serviceAccountPath), 'utf8')
+    );
     console.log(chalk.green('✅ Service account loaded successfully!'));
     console.log(chalk.gray(`   └── Project: ${serviceAccount.project_id}`));
 

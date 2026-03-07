@@ -1,0 +1,35 @@
+name: Conventional PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate PR title follows Conventional Commits
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "PR title: $PR_TITLE"
+
+          # Conventional Commits regex (lenient):
+          # type(scope)!: subject
+          # - type: any word (optional)
+          # - scope: optional, alphanumeric with hyphens
+          # - !: optional breaking change marker
+          # - subject: anything after the colon
+          PATTERN='^([a-zA-Z][a-zA-Z0-9_-]*(\([a-zA-Z0-9_-]+\))?!?: .*|.+)$'
+
+          if echo "$PR_TITLE" | grep -qP "$PATTERN"; then
+            echo "✅ PR title is valid."
+          else
+            echo "❌ PR title must not be empty."
+            exit 1
+          fi

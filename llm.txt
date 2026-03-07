@@ -31,10 +31,12 @@ A comprehensive command-line interface for Firebase Firestore database operation
   - `-m, --merge` - Merge documents instead of overwriting
   - `-e, --exclude <collections...>` - Exclude specific collections
 
-- `firebase-tools-cli query <collection>` - Query a specific collection
+- `firebase-tools-cli query <collection>` - Query a specific collection or document
   - `-w, --where <field,operator,value>` - Where clause (e.g., "age,>=,18")
   - `-l, --limit <number>` - Limit number of results
   - `-o, --order-by <field,direction>` - Order by field (e.g., "name,asc")
+  - `-f, --field <fieldPath>` - Show specific field from document (document queries only)
+  - `-g, --collection-group` - Query as a collection group across all matching subcollections
   - `--json` - Output results as JSON
   - `--output <file>` - Save JSON output to file
 
@@ -145,6 +147,33 @@ Supported Firestore query operators:
 - `array-contains-any` - Array contains any of the values
 - `in` - Value is in array
 - `not-in` - Value is not in array
+
+## Nested Path Queries
+
+### Firestore Subcollections
+Use space-separated path segments to target subcollections. Odd segments = collection query, even segments = document query:
+- `firestore:query users` - Query top-level `users` collection
+- `firestore:query users user1 orders` - Query `orders` subcollection under `users/user1`
+- `firestore:query users user1 orders order42` - Fetch specific document `users/user1/orders/order42`
+- `firestore:query users user1 orders --where "status,==,shipped"` - Filter subcollection
+
+### Firestore Collection Group Queries
+Use `--collection-group` (`-g`) to query all subcollections with a given name across the entire database:
+- `firestore:query orders --collection-group` - Query all `orders` subcollections
+- `firestore:query orders --collection-group --where "status,==,shipped" --limit 20`
+- **Filtered/ordered queries may require a Firestore composite index** - follow the error link to create it in Firebase Console if needed.
+
+### RTDB Nested Paths
+Specify deep paths using either slash-separated or space-separated segments:
+- `rtdb:query users/user4/active` - Query at path `/users/user4/active`
+- `rtdb:query users user4 active` - Same as above (space-separated)
+- `rtdb:query root/a/b/c` - Query at arbitrary depth
+
+### RTDB Nested Field Filters
+Use `/`-separated field paths in `--where` and `--order-by` to filter on nested fields:
+- `rtdb:query users --where "workouts/appVersion,==,2.3.1"` - Filter on nested field
+- `rtdb:query workouts --order-by "settings/duration,desc"` - Sort by nested field
+- `rtdb:query workouts --where "settings/difficulty,>=,3" --order-by "settings/duration,asc"` - Combine both
 
 ## Configuration Files
 - `~/.firebase-tools-cli/config.json` - Default project and settings
@@ -271,6 +300,7 @@ firebase-tools-cli <command>
 - Use service account for production workflows
 
 ## Version Information
-- Node.js: >=14.0.0 required
+- Node.js: >=18.0.0 required (or Bun >=1.0.0)
+- Bun: >=1.0.0 supported as an alternative runtime
 - Firebase Admin SDK: v12.0.0+
 - Supports all current Firestore features and regions 

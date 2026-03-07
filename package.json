@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-cli",
-  "version": "0.5.3",
+  "version": "0.5.9",
   "files": [
     "dist/**/*",
     "README.md",
@@ -22,9 +22,10 @@
     "format": "prettier --write \"src/**/*.{ts,js,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
     "release": "chmod +x ./scripts/release.sh && ./scripts/release.sh",
+    "check:types": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "prepare": "npm run clean && npm run build",
-    "postinstall": "test -f dist/index.js && chmod +x dist/index.js || true"
+    "postinstall": "npm shrinkwrap && test -f dist/index.js && chmod +x dist/index.js || true"
   },
   "keywords": [
     "firestore",
@@ -53,7 +54,8 @@
     "open": "^8.4.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
   },
   "repository": {
     "type": "git",
@@ -64,6 +66,8 @@
   },
   "homepage": "https://github.com/omer-ayhan/firebase-tools-cli#readme",
   "devDependencies": {
+    "@commitlint/cli": "^20.4.3",
+    "@commitlint/config-conventional": "^20.4.3",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/express": "^4.17.21",
     "@types/inquirer": "^8.2.10",

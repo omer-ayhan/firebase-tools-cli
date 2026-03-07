@@ -8,8 +8,6 @@ const rtdbExport = program
   .createCommand('rtdb:export')
   .description('Export all data from Realtime Database')
   .option('-o, --output <dir>', 'Output directory', './')
-  .option('--no-detailed', 'Skip detailed format export')
-  .option('--no-importable', 'Skip importable format export')
   .option('--no-subcollections', 'Skip nested data (limit to top level only)')
   .option('-e, --exclude <paths...>', 'Exclude specific top-level paths')
   .option('-d, --database-url <url>', 'Firebase Realtime Database URL')
@@ -20,7 +18,7 @@ const rtdbExport = program
 Examples:
   $ firebase-tools-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --output ./backups/
   $ firebase-tools-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/  --exclude users logs --output ./backups/
-  $ firebase-tools-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --no-subcollections --no-detailed`
+  $ firebase-tools-cli rtdb:export --database-url https://my-project-default-rtdb.firebaseio.com/ --no-subcollections`
   )
   .action(async (options) => {
     try {
