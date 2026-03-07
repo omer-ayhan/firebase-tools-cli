@@ -24,13 +24,19 @@ async function promptServiceAccountFile() {
           throw new Error(`File not found: ${path}`);
         }
 
+        let content: unknown;
         try {
-          const content = JSON.parse(fs.readFileSync(path, 'utf8'));
-          if (!content.type || content.type !== 'service_account') {
-            throw new Error('Invalid service account file format');
-          }
-        } catch (error) {
+          content = JSON.parse(fs.readFileSync(path, 'utf8'));
+        } catch {
           throw new Error('Invalid JSON file');
+        }
+        if (
+          typeof content !== 'object' ||
+          content === null ||
+          Array.isArray(content) ||
+          (content as Record<string, unknown>).type !== 'service_account'
+        ) {
+          throw new Error('Invalid service account file format');
         }
 
         return path;
@@ -45,7 +51,41 @@ async function configureAdminServiceAccount(
   serviceAccountPath: string,
   projectId: string
 ) {
-  const serviceAccount = require(path.resolve(serviceAccountPath));
+  const resolvedPath = path.resolve(serviceAccountPath);
+
+  let fileContents: string;
+  try {
+    fileContents = fs.readFileSync(resolvedPath, 'utf8');
+  } catch (err: any) {
+    if (err && err.code === 'ENOENT') {
+      throw new Error(
+        `Service account file not found at "${resolvedPath}". ` +
+          'Please check the path or re-run the CLI with a valid --service-account file.'
+      );
+    }
+    throw err;
+  }
+
+  let serviceAccount: any;
+  try {
+    serviceAccount = JSON.parse(fileContents);
+  } catch {
+    throw new Error(
+      `Failed to parse service account JSON file at "${resolvedPath}". ` +
+        'Please ensure the file contains valid JSON for a Firebase service account key.'
+    );
+  }
+
+  if (
+    typeof serviceAccount !== 'object' ||
+    serviceAccount === null ||
+    !serviceAccount.type ||
+    serviceAccount.type !== 'service_account'
+  ) {
+    throw new Error(
+      'Invalid service account file format. Expected a Firebase service account key JSON.'
+    );
+  }
   const credential = admin.credential.cert(serviceAccount);
   const projectIdValue = projectId || serviceAccount.project_id;
 
@@ -120,7 +160,21 @@ async function initializeFirebase(thisCommand: Command) {
 
       const serviceAccountPath = await promptServiceAccountFile();
       options.serviceAccount = serviceAccountPath;
-      const serviceAccount = require(path.resolve(serviceAccountPath));
+      const resolvedServiceAccountPath = path.resolve(serviceAccountPath);
+      const serviceAccountFileContents = fs.readFileSync(
+        resolvedServiceAccountPath,
+        'utf8'
+      );
+      let serviceAccount;
+      try {
+        serviceAccount = JSON.parse(serviceAccountFileContents);
+      } catch (parseError) {
+        const parseMessage =
+          parseError instanceof Error ? parseError.message : String(parseError);
+        throw new Error(
+          `Invalid service account JSON at "${resolvedServiceAccountPath}": ${parseMessage}`
+        );
+      }
       const { db, projectId } = await configureAdminServiceAccount(
         serviceAccountPath,
         projectIdValue || serviceAccount.project_id || config.defaultProject
