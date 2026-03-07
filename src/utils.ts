@@ -82,6 +82,7 @@ function ensureConfigDir() {
 function saveConfig(config: ConfigType) {
   ensureConfigDir();
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), { mode: 0o600 });
+  fs.chmodSync(CONFIG_FILE, 0o600);
 }
 
 // Load configuration
@@ -100,6 +101,7 @@ function loadConfig() {
 function saveCredentials(credentials: Credentials) {
   ensureConfigDir();
   fs.writeFileSync(CREDENTIALS_FILE, JSON.stringify(credentials, null, 2), { mode: 0o600 });
+  fs.chmodSync(CREDENTIALS_FILE, 0o600);
 }
 
 export {

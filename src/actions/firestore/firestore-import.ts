@@ -22,13 +22,28 @@ export async function importCollections(
     }
 
     const rawData = fs.readFileSync(file, 'utf8');
-    let importData: Record<string, unknown>;
+    let parsedData: unknown;
     try {
-      importData = JSON.parse(rawData);
+      parsedData = JSON.parse(rawData);
     } catch {
       console.error(chalk.red('❌ Import file contains invalid JSON'));
       process.exit(1);
     }
+
+    if (
+      parsedData === null ||
+      typeof parsedData !== 'object' ||
+      Array.isArray(parsedData)
+    ) {
+      console.error(
+        chalk.red(
+          '❌ Invalid import data format: file must contain a JSON object, not an array, null, or primitive value'
+        )
+      );
+      process.exit(1);
+    }
+
+    const importData = parsedData as Record<string, unknown>;
 
     let totalImported = 0;
     const batchSize = options.batchSize || 500;
