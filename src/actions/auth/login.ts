@@ -287,27 +287,32 @@ async function promptServiceAccountFile() {
       name: 'serviceAccountPath',
       message: 'Enter path to service account JSON file:',
       filter: (input) => {
-        const path = input.trim();
+        const filePath = input.trim();
 
-        if (!path) {
+        if (!filePath) {
           throw new Error('Please enter a valid file path');
         }
 
-        if (!fs.existsSync(path)) {
-          throw new Error(`File not found: ${path}`);
+        if (!fs.existsSync(filePath)) {
+          throw new Error(`File not found: ${filePath}`);
         }
 
-        let content: Record<string, unknown>;
+        let content: unknown;
         try {
-          content = JSON.parse(fs.readFileSync(path, 'utf8'));
+          content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         } catch {
           throw new Error('Invalid JSON file');
         }
-        if (!content.type || content.type !== 'service_account') {
+        if (
+          typeof content !== 'object' ||
+          content === null ||
+          Array.isArray(content) ||
+          (content as Record<string, unknown>).type !== 'service_account'
+        ) {
           throw new Error('Invalid service account file format');
         }
 
-        return path;
+        return filePath;
       },
     },
   ]);
