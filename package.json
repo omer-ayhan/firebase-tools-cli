@@ -1,6 +1,6 @@
 {
   "name": "firebase-tools-cli",
-  "version": "0.5.3",
+  "version": "0.5.9",
   "files": [
     "dist/**/*",
     "README.md",
@@ -24,7 +24,7 @@
     "release": "chmod +x ./scripts/release.sh && ./scripts/release.sh",
     "prepublishOnly": "npm run build",
     "prepare": "npm run clean && npm run build",
-    "postinstall": "test -f dist/index.js && chmod +x dist/index.js || true"
+    "postinstall": "npm shrinkwrap && test -f dist/index.js && chmod +x dist/index.js || true"
   },
   "keywords": [
     "firestore",
