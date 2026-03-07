@@ -13,7 +13,7 @@ type(scope)!: subject
 - **type** (required): `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
 - **scope** (optional): area of the codebase affected — see allowed scopes below
 - **`!`** (optional): denotes a breaking change
-- **subject** (required): 1–72 characters, lowercase imperative, no trailing period
+- **subject** (required): describe the change
 
 ### Examples
 

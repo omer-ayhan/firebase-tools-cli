@@ -76,7 +76,7 @@ All commit messages **must** follow [Conventional Commits](https://www.conventio
 | `type` | `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` |
 | `scope` | Optional: `cli`, `firestore`, `rtdb`, `remote-config`, `auth`, `config`, `release`, `docs`, `deps` |
 | `!` | Optional: marks a breaking change |
-| `subject` | 1–72 characters, imperative mood, no trailing period |
+| `subject` | Describe the change (no format enforcement) |
 
 **Examples:**
 
@@ -98,7 +98,6 @@ type(scope)!: subject
 **Common failure messages:**
 
 - `❌ PR title does not follow Conventional Commits format.` — Fix: rename your PR title to match the format above.
-- `✖ subject may not be empty` (commitlint) — Fix: ensure your commit message has a subject after the colon.
 - `✖ type must be one of [feat, fix, ...]` (commitlint) — Fix: use an allowed type.
 
 ### Branch Naming Conventions
