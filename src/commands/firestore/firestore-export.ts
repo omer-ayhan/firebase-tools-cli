@@ -7,8 +7,6 @@ const firestoreExport = program
   .createCommand('firestore:export')
   .description('Export all collections from Firestore')
   .option('-o, --output <dir>', 'Output directory', './')
-  .option('--no-detailed', 'Skip detailed format export')
-  .option('--no-importable', 'Skip importable format export')
   .option('--no-subcollections', 'Skip subcollections')
   .option('-e, --exclude <collections...>', 'Exclude specific collections')
   .action(async (options) => {
