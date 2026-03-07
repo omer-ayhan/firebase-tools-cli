@@ -69,7 +69,7 @@ Below is a brief list of the available commands and their function:
 | **firestore:export** | Export all collections from Firestore to a single compact importable JSON file (`firestore_export.json`). Supports subcollection handling and collection exclusions. |
 | **firestore:import** | Import data to Firestore from JSON file. Supports batch operations and merge functionality.                         |
 | **firestore:list**   | List all collections and their basic information from the current project's Firestore database.                     |
-| **firestore:query**  | Query a collection or fetch a specific document. Supports advanced filtering, ordering, and field-specific queries. |
+| **firestore:query**  | Query a collection or fetch a specific document. Supports subcollection paths (e.g., `users user1 orders`), collection group queries (`--collection-group`), advanced filtering, ordering, and field-specific queries. |
 
 ### Realtime Database Commands
 
@@ -78,7 +78,7 @@ Below is a brief list of the available commands and their function:
 | **rtdb:export** | Export all data from Realtime Database to a single compact importable JSON file (`rtdb_export.json`). Supports exclusion options and top-level-only export. |
 | **rtdb:import** | Import data to Realtime Database from JSON file. Supports batch operations and merge functionality.         |
 | **rtdb:list**   | List all top-level nodes and their basic information from the current project's Realtime Database.          |
-| **rtdb:query**  | Query a specific path in Realtime Database. Supports filtering, ordering, and JSON output with file saving. |
+| **rtdb:query**  | Query a specific path in Realtime Database. Supports deep nested paths (e.g., `/root/a/b/c`), nested field filters (`field/subfield,==,value`), ordering, and JSON output with file saving. |
 
 ### Remote Config Commands
 
@@ -127,12 +127,29 @@ firebase-tools-cli rtdb:import ./rtdb-backup/rtdb_export.json --database-url htt
 firebase-tools-cli firestore:query users --where "age,>=,18" --limit 10
 firebase-tools-cli firestore:query users --order-by "name,asc"
 
+# Query Firestore subcollections (nested paths)
+firebase-tools-cli firestore:query users user1 orders
+firebase-tools-cli firestore:query users user1 orders --where "status,==,shipped" --limit 5
+firebase-tools-cli firestore:query users user1 orders order1
+
+# Query Firestore collection groups (all subcollections with the same name)
+firebase-tools-cli firestore:query orders --collection-group
+firebase-tools-cli firestore:query orders --collection-group --where "status,==,shipped" --limit 20
+
 # Query specific document fields
 firebase-tools-cli firestore:query users user1 --field profile.settings
 
 # Query Realtime Database with filtering
 firebase-tools-cli rtdb:query users --where "age,>=,18" --limit 10 --database-url https://my-project-rtdb.firebaseio.com/
 firebase-tools-cli rtdb:query posts --order-by "timestamp,desc" --json --output results.json
+
+# Query Realtime Database at a nested path
+firebase-tools-cli rtdb:query users/user4/active --database-url https://my-project-rtdb.firebaseio.com/
+firebase-tools-cli rtdb:query users user4 active --database-url https://my-project-rtdb.firebaseio.com/
+
+# Query Realtime Database with nested field filters
+firebase-tools-cli rtdb:query users --where "workouts/appVersion,==,2.3.1" --database-url https://my-project-rtdb.firebaseio.com/
+firebase-tools-cli rtdb:query workouts --where "settings/difficulty,>=,3" --order-by "settings/duration,desc" --database-url https://my-project-rtdb.firebaseio.com/
 ```
 
 ### Remote Config Management
