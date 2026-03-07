@@ -230,7 +230,7 @@ async function queryDocument(
         const [filterField, operator, value] = options.where.split(',');
         if (!filterField || !operator || value === undefined) {
           throw new Error(
-            'Where clause must be in format "field,operator,value" (e.g., "page_type,==,question-page_v1")'
+            'Where clause must be in format "field,operator,value" (e.g., "page_type,==,question_1")'
           );
         }
 

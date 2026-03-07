@@ -56,13 +56,13 @@ Examples:
     $ firebase-tools-cli firestore:query orders --collection-group --order-by "createdAt,desc" --limit 20
 
   Field-specific queries (document queries only):
-    $ firebase-tools-cli firestore:query mobile_onboardings 1 --field pages
+    $ firebase-tools-cli firestore:query onboardings v1 --field pages
     $ firebase-tools-cli firestore:query users user1 --field profile.settings
     $ firebase-tools-cli firestore:query posts post1 --field metadata.tags.0
 
   Field queries with filtering (array fields only):
-    $ firebase-tools-cli firestore:query mobile_onboardings 1 --field pages --where "page_type,==,question-page_v1"
-    $ firebase-tools-cli firestore:query mobile_onboardings 1 --field pages --where "page_type,==,question-page_v1" --order-by "page_order,asc"
+    $ firebase-tools-cli firestore:query onboardings v1 --field pages --where "page_type,==,question_1"
+    $ firebase-tools-cli firestore:query onboardings v1 --field pages --where "page_type,==,question_1" --order-by "page_order,asc"
     $ firebase-tools-cli firestore:query users user1 --field posts --where "published,==,true" --limit 5
     $ firebase-tools-cli firestore:query posts post1 --field comments --where "rating,>=,4" --order-by "timestamp,desc"
 
