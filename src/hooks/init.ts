@@ -2,9 +2,11 @@ import chalk from 'chalk';
 import { Command } from 'commander';
 import * as admin from 'firebase-admin';
 import fs from 'fs';
+import { Credentials, OAuth2Client } from 'google-auth-library';
 import inquirer from 'inquirer';
 import path from 'path';
 
+import { CREDENTIALS_FILE, OAUTH_CONFIG } from '@/constants';
 import { loadConfig, saveConfig } from '@/utils';
 
 async function promptServiceAccountFile() {
@@ -103,6 +105,42 @@ async function configureAdminServiceAccount(
   return { db, credential, projectId };
 }
 
+async function configureAdminOAuth(
+  credentials: Credentials,
+  projectId: string
+) {
+  const oauth2Client = new OAuth2Client(
+    OAUTH_CONFIG.clientId,
+    OAUTH_CONFIG.clientSecret,
+    OAUTH_CONFIG.redirectUri
+  );
+  oauth2Client.setCredentials(credentials);
+
+  const credential: admin.credential.Credential = {
+    getAccessToken: async () => {
+      const tokenResponse = await oauth2Client.getAccessToken();
+      if (!tokenResponse.token) {
+        throw new Error('Failed to retrieve OAuth access token');
+      }
+      const expiresIn =
+        (tokenResponse.res?.data as { expires_in?: number } | undefined)
+          ?.expires_in ?? 3600;
+      return {
+        access_token: tokenResponse.token,
+        expires_in: expiresIn,
+      };
+    },
+  };
+
+  console.log(chalk.blue(`🔐 Using OAuth authentication`));
+  console.log(chalk.gray(`   └── Project: ${projectId}`));
+
+  admin.initializeApp({ credential, projectId });
+  const db = admin.firestore();
+
+  return { db, credential, projectId };
+}
+
 async function initializeFirebase(thisCommand: Command) {
   const commandName = thisCommand.args[0];
   const skipAuthCommands = ['reset', 'logout', 'login', 'docs', 'convert'];
@@ -150,6 +188,35 @@ async function initializeFirebase(thisCommand: Command) {
           projectIdValue
         );
 
+        return;
+      }
+
+      // Check for saved OAuth credentials
+      if (config.authMethod === 'oauth' && fs.existsSync(CREDENTIALS_FILE)) {
+        let savedCredentials: Credentials;
+        try {
+          savedCredentials = JSON.parse(
+            fs.readFileSync(CREDENTIALS_FILE, 'utf8')
+          );
+        } catch {
+          throw new Error(
+            'Saved OAuth credentials are corrupted. Please run: firebase-tools-cli login --force'
+          );
+        }
+
+        projectIdValue = projectIdValue || config.defaultProject;
+
+        if (!projectIdValue) {
+          console.log(chalk.yellow('⚠️  No default project configured'));
+          console.log(
+            chalk.gray(
+              '   Run: firebase-tools-cli projects --set-default <projectId>'
+            )
+          );
+          process.exit(1);
+        }
+
+        await configureAdminOAuth(savedCredentials, projectIdValue);
         return;
       }
 
