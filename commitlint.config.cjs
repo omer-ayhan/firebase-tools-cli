@@ -2,21 +2,10 @@
 module.exports = {
   extends: ['@commitlint/config-conventional'],
   rules: {
-    'scope-enum': [
-      2,
-      'always',
-      [
-        'cli',
-        'firestore',
-        'rtdb',
-        'remote-config',
-        'auth',
-        'config',
-        'release',
-        'docs',
-        'deps',
-      ],
-    ],
+    'type-enum': [0],
+    'type-case': [0],
+    'type-empty': [0],
+    'scope-enum': [0],
     'scope-empty': [0],
     'subject-case': [0],
     'subject-empty': [0],

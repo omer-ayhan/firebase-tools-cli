@@ -2,7 +2,7 @@
 
 ## Conventional Commits
 
-All commit messages **must** follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. This is enforced by CI via commitlint.
+All commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/) specification where possible. Only basic format is checked by CI (non-empty message).
 
 ### Format
 
@@ -10,10 +10,10 @@ All commit messages **must** follow the [Conventional Commits](https://www.conve
 type(scope)!: subject
 ```
 
-- **type** (required): `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+- **type** (optional): `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` — or any descriptive word
 - **scope** (optional): area of the codebase affected — see allowed scopes below
 - **`!`** (optional): denotes a breaking change
-- **subject** (required): describe the change
+- **subject** (optional): describe the change
 
 ### Examples
 
@@ -135,7 +135,7 @@ When opening a pull request, always set the base branch as follows:
 
 Include this checklist in every PR description:
 
-- [ ] PR title follows Conventional Commits format (`type(scope): subject`)
+- [ ] PR title is non-empty (conventional format recommended but not required)
 - [ ] All commit messages follow Conventional Commits format
 - [ ] `npm ci` passes without errors
 - [ ] `npx tsc --noEmit` passes

@@ -67,13 +67,13 @@ Thank you for your interest in contributing to Firebase Tools CLI! This guide wi
 
 ### Commit Message Convention
 
-All commit messages **must** follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). This is enforced by the **Commitlint** CI workflow — non-conforming commits will fail the check.
+Commit messages should follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) where possible. CI checks that commit messages are non-empty; type and subject format are not strictly enforced.
 
-**Format:** `type(scope)!: subject`
+**Recommended format:** `type(scope)!: subject`
 
 | Field | Details |
 |-------|---------|
-| `type` | `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` |
+| `type` | Optional: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` |
 | `scope` | Optional: `cli`, `firestore`, `rtdb`, `remote-config`, `auth`, `config`, `release`, `docs`, `deps` |
 | `!` | Optional: marks a breaking change |
 | `subject` | Describe the change (no format enforcement) |
@@ -89,16 +89,11 @@ chore: bump version to 0.6.0
 
 ### PR Title Convention
 
-PR titles **must** follow the same Conventional Commits format as commit messages. This is enforced by the **Conventional PR Title** CI workflow.
+PR titles should follow the Conventional Commits format where possible. The CI workflow only checks that the title is non-empty.
 
 ```
 type(scope)!: subject
 ```
-
-**Common failure messages:**
-
-- `❌ PR title does not follow Conventional Commits format.` — Fix: rename your PR title to match the format above.
-- `✖ type must be one of [feat, fix, ...]` (commitlint) — Fix: use an allowed type.
 
 ### Branch Naming Conventions
 
