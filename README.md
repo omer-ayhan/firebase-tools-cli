@@ -8,6 +8,8 @@
 
 The Firebase Tools CLI is a command-line interface for managing Firebase services including Firestore, Realtime Database, and Remote Config. It provides powerful tools to export, import, query, and manage your Firebase data from the command line.
 
+📄 [Privacy Policy](docs/PRIVACY.md) • [Terms of Service](docs/TERMS.md)
+
 - Export/Import data from Firestore and Realtime Database
 - Query collections and documents with advanced filtering
 - Convert JSON files to Firebase Remote Config format
@@ -64,20 +66,20 @@ Below is a brief list of the available commands and their function:
 
 ### Firestore Commands
 
-| Command              | Description                                                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **firestore:export** | Export all collections from Firestore to a single compact importable JSON file (`firestore_export.json`). Supports subcollection handling and collection exclusions. |
-| **firestore:import** | Import data to Firestore from JSON file. Supports batch operations and merge functionality.                         |
-| **firestore:list**   | List all collections and their basic information from the current project's Firestore database.                     |
+| Command              | Description                                                                                                                                                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **firestore:export** | Export all collections from Firestore to a single compact importable JSON file (`firestore_export.json`). Supports subcollection handling and collection exclusions.                                                   |
+| **firestore:import** | Import data to Firestore from JSON file. Supports batch operations and merge functionality.                                                                                                                            |
+| **firestore:list**   | List all collections and their basic information from the current project's Firestore database.                                                                                                                        |
 | **firestore:query**  | Query a collection or fetch a specific document. Supports subcollection paths (e.g., `users user1 orders`), collection group queries (`--collection-group`), advanced filtering, ordering, and field-specific queries. |
 
 ### Realtime Database Commands
 
-| Command         | Description                                                                                                 |
-| --------------- | ----------------------------------------------------------------------------------------------------------- |
-| **rtdb:export** | Export all data from Realtime Database to a single compact importable JSON file (`rtdb_export.json`). Supports exclusion options and top-level-only export. |
-| **rtdb:import** | Import data to Realtime Database from JSON file. Supports batch operations and merge functionality.         |
-| **rtdb:list**   | List all top-level nodes and their basic information from the current project's Realtime Database.          |
+| Command         | Description                                                                                                                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **rtdb:export** | Export all data from Realtime Database to a single compact importable JSON file (`rtdb_export.json`). Supports exclusion options and top-level-only export.                                 |
+| **rtdb:import** | Import data to Realtime Database from JSON file. Supports batch operations and merge functionality.                                                                                         |
+| **rtdb:list**   | List all top-level nodes and their basic information from the current project's Realtime Database.                                                                                          |
 | **rtdb:query**  | Query a specific path in Realtime Database. Supports deep nested paths (e.g., `/root/a/b/c`), nested field filters (`field/subfield,==,value`), ordering, and JSON output with file saving. |
 
 ### Remote Config Commands
