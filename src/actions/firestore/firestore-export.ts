@@ -7,7 +7,7 @@ import { QueryDocumentSnapshotType } from '@/types';
 
 type ExportCommandOptionsType = {
   exclude?: string[];
-  noSubcollections?: boolean;
+  subcollections?: boolean;
   output?: string;
 };
 
@@ -30,6 +30,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
     const importData: ImportData = {};
     let totalDocsRead = 0;
     let totalSubDocsRead = 0;
+    let collectionsProcessed = 0;
 
     for (const collection of collections) {
       const collectionName = collection.id;
@@ -70,7 +71,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
           collectionDocsRead++;
 
           // Handle subcollections if enabled
-          if (!options.noSubcollections) {
+          if (options.subcollections !== false) {
             const subcollections = await doc.ref.listCollections();
             if (subcollections.length > 0) {
               // Clear loading line and show subcollection info
@@ -125,6 +126,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
 
         totalDocsRead += collectionDocsRead;
         totalSubDocsRead += collectionSubDocsRead;
+        collectionsProcessed++;
 
         // Show final count for this collection
         const subCollectionText =
@@ -170,9 +172,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
     const exportSize = (fs.statSync(exportFile).size / 1024 / 1024).toFixed(2);
     console.log(chalk.blue('\n📊 Export Summary:'));
     console.log(
-      chalk.gray(
-        `   └── Collections processed: ${Object.keys(importData).length}`
-      )
+      chalk.gray(`   └── Collections processed: ${collectionsProcessed}`)
     );
     console.log(chalk.gray(`   └── Documents read: ${totalDocsRead}`));
 
