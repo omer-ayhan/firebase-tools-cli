@@ -46,7 +46,7 @@ export async function exportRealtimeDatabase(options: ExportRTDBOptionsType) {
         chalk.yellow(`⏭️  Excluding paths: ${options.exclude.join(', ')}`)
       );
       for (const excludePath of options.exclude) {
-        if (allData[excludePath]) {
+        if (Object.prototype.hasOwnProperty.call(allData, excludePath)) {
           delete allData[excludePath];
           console.log(chalk.gray(`   └── Excluded: ${excludePath}`));
         }

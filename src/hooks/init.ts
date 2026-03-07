@@ -24,13 +24,14 @@ async function promptServiceAccountFile() {
           throw new Error(`File not found: ${path}`);
         }
 
+        let content: Record<string, unknown>;
         try {
-          const content = JSON.parse(fs.readFileSync(path, 'utf8'));
-          if (!content.type || content.type !== 'service_account') {
-            throw new Error('Invalid service account file format');
-          }
-        } catch (error) {
+          content = JSON.parse(fs.readFileSync(path, 'utf8'));
+        } catch {
           throw new Error('Invalid JSON file');
+        }
+        if (!content.type || content.type !== 'service_account') {
+          throw new Error('Invalid service account file format');
         }
 
         return path;
@@ -45,7 +46,9 @@ async function configureAdminServiceAccount(
   serviceAccountPath: string,
   projectId: string
 ) {
-  const serviceAccount = require(path.resolve(serviceAccountPath));
+  const serviceAccount = JSON.parse(
+    fs.readFileSync(path.resolve(serviceAccountPath), 'utf8')
+  );
   const credential = admin.credential.cert(serviceAccount);
   const projectIdValue = projectId || serviceAccount.project_id;
 
@@ -120,7 +123,9 @@ async function initializeFirebase(thisCommand: Command) {
 
       const serviceAccountPath = await promptServiceAccountFile();
       options.serviceAccount = serviceAccountPath;
-      const serviceAccount = require(path.resolve(serviceAccountPath));
+      const serviceAccount = JSON.parse(
+        fs.readFileSync(path.resolve(serviceAccountPath), 'utf8')
+      );
       const { db, projectId } = await configureAdminServiceAccount(
         serviceAccountPath,
         projectIdValue || serviceAccount.project_id || config.defaultProject

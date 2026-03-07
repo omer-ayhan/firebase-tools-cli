@@ -22,7 +22,13 @@ export async function importCollections(
     }
 
     const rawData = fs.readFileSync(file, 'utf8');
-    const importData = JSON.parse(rawData);
+    let importData: Record<string, unknown>;
+    try {
+      importData = JSON.parse(rawData);
+    } catch {
+      console.error(chalk.red('❌ Import file contains invalid JSON'));
+      process.exit(1);
+    }
 
     let totalImported = 0;
     const batchSize = options.batchSize || 500;
