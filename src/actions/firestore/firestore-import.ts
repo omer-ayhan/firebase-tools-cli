@@ -23,6 +23,7 @@ export async function importCollections(
 
     const rawData = fs.readFileSync(file, 'utf8');
     let parsedData: unknown;
+    let parsedData: unknown;
     try {
       parsedData = JSON.parse(rawData);
     } catch {
@@ -30,6 +31,16 @@ export async function importCollections(
       process.exit(1);
     }
 
+    if (
+      parsedData === null ||
+      typeof parsedData !== 'object' ||
+      Array.isArray(parsedData)
+    ) {
+      console.error(chalk.red('❌ Invalid import data format'));
+      process.exit(1);
+    }
+
+    importData = parsedData as Record<string, unknown>;
     if (
       parsedData === null ||
       typeof parsedData !== 'object' ||
