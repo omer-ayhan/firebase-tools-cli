@@ -49,7 +49,7 @@ Below is a brief list of the available commands and their function:
 
 | Command              | Description                                                                                                         |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **firestore:export** | Export all collections from Firestore. Supports detailed and importable formats with subcollection handling.        |
+| **firestore:export** | Export all collections from Firestore to a single compact importable JSON file (`firestore_export.json`). Supports subcollection handling and collection exclusions. |
 | **firestore:import** | Import data to Firestore from JSON file. Supports batch operations and merge functionality.                         |
 | **firestore:list**   | List all collections and their basic information from the current project's Firestore database.                     |
 | **firestore:query**  | Query a collection or fetch a specific document. Supports advanced filtering, ordering, and field-specific queries. |
@@ -58,7 +58,7 @@ Below is a brief list of the available commands and their function:
 
 | Command         | Description                                                                                                 |
 | --------------- | ----------------------------------------------------------------------------------------------------------- |
-| **rtdb:export** | Export all data from Realtime Database. Supports detailed and importable formats with exclusion options.    |
+| **rtdb:export** | Export all data from Realtime Database to a single compact importable JSON file (`rtdb_export.json`). Supports exclusion options and top-level-only export. |
 | **rtdb:import** | Import data to Realtime Database from JSON file. Supports batch operations and merge functionality.         |
 | **rtdb:list**   | List all top-level nodes and their basic information from the current project's Realtime Database.          |
 | **rtdb:query**  | Query a specific path in Realtime Database. Supports filtering, ordering, and JSON output with file saving. |
@@ -94,13 +94,13 @@ To clear the default project setting, run `firebase-tools-cli projects --clear-d
 firebase-tools-cli firestore:export --output ./backup-$(date +%Y%m%d)/
 
 # Import data to another project
-firebase-tools-cli firestore:import ./backup-20231201/firestore-export.json
+firebase-tools-cli firestore:import ./backup-20231201/firestore_export.json
 
 # Export Realtime Database
 firebase-tools-cli rtdb:export --database-url https://source-project-rtdb.firebaseio.com/ --output ./rtdb-backup/
 
 # Import to target database
-firebase-tools-cli rtdb:import ./rtdb-backup/rtdb-export.json --database-url https://target-project-rtdb.firebaseio.com/
+firebase-tools-cli rtdb:import ./rtdb-backup/rtdb_export.json --database-url https://target-project-rtdb.firebaseio.com/
 ```
 
 ### Advanced Querying
