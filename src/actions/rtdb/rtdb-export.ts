@@ -8,22 +8,12 @@ import { countNodes } from '@/utils';
 type ExportRTDBOptionsType = {
   exclude?: string[];
   subcollections?: boolean;
-  detailed?: boolean;
-  importable?: boolean;
   output?: string;
 };
 
 export async function exportRealtimeDatabase(options: ExportRTDBOptionsType) {
   try {
     console.log(chalk.blue('🔍 Starting Realtime Database export...\n'));
-
-    if (options.importable === false && options.detailed === false) {
-      console.log(chalk.yellow('💡 No export format selected'));
-      console.log(
-        chalk.gray('   • Use --detailed or --importable to export data')
-      );
-      return;
-    }
 
     // Get the database reference (should be configured during initialization)
     const rtdbApp = admin.app('rtdb-app');
@@ -71,108 +61,33 @@ export async function exportRealtimeDatabase(options: ExportRTDBOptionsType) {
       allData = topLevelData;
     }
 
-    // Generate file names
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const outputDir = options.output || './';
 
-    console.log(chalk.blue('💾 Saving export files...'));
+    console.log(chalk.blue('💾 Saving export file...'));
 
     // Create saving loading indicator
     let savingDots = 0;
-    let savingInterval = setInterval(() => {
+    const savingInterval = setInterval(() => {
       const dots = '.'.repeat((savingDots % 3) + 1);
-      process.stdout.write(`\r${chalk.gray(`   └── Writing files${dots}   `)}`);
+      process.stdout.write(`\r${chalk.gray(`   └── Writing file${dots}   `)}`);
       savingDots++;
     }, 200);
 
-    let filesCreated = 0;
+    const exportFile = path.join(outputDir, 'rtdb_export.json');
+    fs.writeFileSync(exportFile, JSON.stringify(allData));
 
-    // Save detailed format (includes metadata)
-    if (options.detailed !== false) {
-      const detailedData = {
-        exportInfo: {
-          timestamp: new Date().toISOString(),
-          source: 'Firebase Realtime Database',
-          databaseUrl: rtdbApp.options.databaseURL,
-          exportedBy: 'firebase-tools-cli',
-          totalNodes: countNodes(allData),
-        },
-        data: allData,
-      };
-
-      const detailedFile = path.join(
-        outputDir,
-        `rtdb_detailed_${timestamp}.json`
-      );
-      fs.writeFileSync(detailedFile, JSON.stringify(detailedData, null, 2));
-      filesCreated++;
-
-      clearInterval(savingInterval);
-      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
-      console.log(chalk.green(`📄 Detailed backup saved: ${detailedFile}`));
-
-      // Restart saving indicator if we have more files to save
-      if (options.importable !== false) {
-        savingInterval = setInterval(() => {
-          const dots = '.'.repeat((savingDots % 3) + 1);
-          process.stdout.write(
-            `\r${chalk.gray(`   └── Writing files${dots}   `)}`
-          );
-          savingDots++;
-        }, 200);
-      }
-    }
-
-    // Save importable format (clean data only)
-    if (options.importable !== false) {
-      const importableFile = path.join(
-        outputDir,
-        `rtdb_importable_${timestamp}.json`
-      );
-      fs.writeFileSync(importableFile, JSON.stringify(allData, null, 2));
-      filesCreated++;
-
-      clearInterval(savingInterval);
-      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
-      console.log(chalk.green(`📤 Importable backup saved: ${importableFile}`));
-    }
+    clearInterval(savingInterval);
+    process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
+    console.log(chalk.green(`📤 Export saved: ${exportFile}`));
 
     // Summary
+    const exportSize = (fs.statSync(exportFile).size / 1024 / 1024).toFixed(2);
     console.log(chalk.blue('\n📊 Export Summary:'));
     console.log(chalk.gray(`   └── Database: ${rtdbApp.options.databaseURL}`));
     console.log(
       chalk.gray(`   └── Total nodes exported: ${countNodes(allData)}`)
     );
-    console.log(chalk.gray(`   └── Files created: ${filesCreated}`));
-
-    // Calculate file sizes
-    if (options.detailed !== false) {
-      const detailedFile = path.join(
-        outputDir,
-        `rtdb_detailed_${timestamp}.json`
-      );
-      const detailedSize = (
-        fs.statSync(detailedFile).size /
-        1024 /
-        1024
-      ).toFixed(2);
-      console.log(chalk.gray(`   └── Detailed file size: ${detailedSize} MB`));
-    }
-
-    if (options.importable !== false) {
-      const importableFile = path.join(
-        outputDir,
-        `rtdb_importable_${timestamp}.json`
-      );
-      const importableSize = (
-        fs.statSync(importableFile).size /
-        1024 /
-        1024
-      ).toFixed(2);
-      console.log(
-        chalk.gray(`   └── Importable file size: ${importableSize} MB`)
-      );
-    }
+    console.log(chalk.gray(`   └── Export file size: ${exportSize} MB`));
 
     console.log(
       chalk.green('\n🎉 Realtime Database export completed successfully!')

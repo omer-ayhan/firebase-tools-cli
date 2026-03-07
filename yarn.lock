@@ -118,10 +118,10 @@
     "@babel/helper-validator-identifier" "^7.16.7"
     to-fast-properties "^2.0.0"
 
-"@esbuild/darwin-arm64@0.25.5":
+"@esbuild/linux-x64@0.25.5":
   version "0.25.5"
-  resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.5.tgz"
-  integrity sha512-GtaBgammVvdF7aPIgH2jxMDdivezgFu6iKpmT+48+F8Hhg5J/sfnDieg0aeG/jfSvkYQU2/pceFPDKlqZzwnfQ==
+  resolved "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.5.tgz"
+  integrity sha512-uhj8N2obKTE6pSZ+aMUbqq+1nXxNjZIIjCjGLfsWvVpy7gKCOL6rsY1MhRh9zLtUtAI7vpgLMK6DxjO8Qm9lJw==
 
 "@fastify/busboy@^3.0.0":
   version "3.1.1"

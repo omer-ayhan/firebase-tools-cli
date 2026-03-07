@@ -8,8 +8,6 @@ import { QueryDocumentSnapshotType } from '@/types';
 type ExportCommandOptionsType = {
   exclude?: string[];
   noSubcollections?: boolean;
-  detailed?: boolean;
-  importable?: boolean;
   output?: string;
 };
 
@@ -29,18 +27,6 @@ export async function exportCollections(options: ExportCommandOptionsType) {
       chalk.cyan(`📁 Found ${collections.length} top-level collections\n`)
     );
 
-    const allData: {
-      [key: string]: {
-        id: string;
-        data: any;
-        createTime: admin.firestore.Timestamp;
-        updateTime: admin.firestore.Timestamp;
-        error?: string;
-        subcollections?: {
-          [key: string]: any[];
-        };
-      }[];
-    } = {};
     const importData: ImportData = {};
     let totalDocsRead = 0;
     let totalSubDocsRead = 0;
@@ -60,7 +46,6 @@ export async function exportCollections(options: ExportCommandOptionsType) {
 
       try {
         const snapshot = await collection.get();
-        const documents = [];
         let collectionDocsRead = 0;
         let collectionSubDocsRead = 0;
 
@@ -80,21 +65,6 @@ export async function exportCollections(options: ExportCommandOptionsType) {
         }, 300);
 
         for (const doc of snapshot.docs) {
-          const docData: {
-            id: string;
-            data: any;
-            createTime: admin.firestore.Timestamp;
-            updateTime: admin.firestore.Timestamp;
-            subcollections?: {
-              [key: string]: any[];
-            };
-          } = {
-            id: doc.id,
-            data: doc.data(),
-            createTime: doc.createTime,
-            updateTime: doc.updateTime,
-          };
-
           // Add to importable format
           importData[collectionName][doc.id] = doc.data();
           collectionDocsRead++;
@@ -103,8 +73,6 @@ export async function exportCollections(options: ExportCommandOptionsType) {
           if (!options.noSubcollections) {
             const subcollections = await doc.ref.listCollections();
             if (subcollections.length > 0) {
-              docData.subcollections = {};
-
               // Clear loading line and show subcollection info
               clearInterval(loadingInterval);
               process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
@@ -116,30 +84,23 @@ export async function exportCollections(options: ExportCommandOptionsType) {
 
               for (const subcol of subcollections) {
                 const subSnapshot = await subcol.get();
-                const subDocs: any[] = [];
 
                 // For importable format
                 const subCollectionPath = `${collectionName}__${doc.id}__${subcol.id}`;
                 importData[subCollectionPath] = {};
 
+                let subDocsRead = 0;
                 subSnapshot.forEach((subDoc: QueryDocumentSnapshotType) => {
-                  const subDocData = {
-                    id: subDoc.id,
-                    data: subDoc.data(),
-                    createTime: subDoc.createTime,
-                    updateTime: subDoc.updateTime,
-                  };
-                  subDocs.push(subDocData);
                   collectionSubDocsRead++;
+                  subDocsRead++;
 
                   // Add to importable format
                   importData[subCollectionPath][subDoc.id] = subDoc.data();
                 });
 
-                docData.subcollections[subcol.id] = subDocs;
                 console.log(
                   chalk.gray(
-                    `           └── Subcollection ${subcol.id}: ${subDocs.length} documents read`
+                    `           └── Subcollection ${subcol.id}: ${subDocsRead} documents read`
                   )
                 );
               }
@@ -156,15 +117,12 @@ export async function exportCollections(options: ExportCommandOptionsType) {
               }
             }
           }
-
-          documents.push(docData);
         }
 
         // Clear loading indicator
         clearInterval(loadingInterval);
         process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
 
-        allData[collectionName] = documents;
         totalDocsRead += collectionDocsRead;
         totalSubDocsRead += collectionSubDocsRead;
 
@@ -189,61 +147,32 @@ export async function exportCollections(options: ExportCommandOptionsType) {
       }
     }
 
-    // Generate file names
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const outputDir = options.output || './';
 
-    console.log(chalk.blue('💾 Saving export files...'));
+    console.log(chalk.blue('💾 Saving export file...'));
 
     // Create saving loading indicator
     let savingDots = 0;
-    let savingInterval = setInterval(() => {
+    const savingInterval = setInterval(() => {
       const dots = '.'.repeat((savingDots % 3) + 1);
-      process.stdout.write(`\r${chalk.gray(`   └── Writing files${dots}   `)}`);
+      process.stdout.write(`\r${chalk.gray(`   └── Writing file${dots}   `)}`);
       savingDots++;
     }, 200);
 
-    // Save detailed format
-    if (options.detailed !== false) {
-      const detailedFile = path.join(
-        outputDir,
-        `firestore_detailed_${timestamp}.json`
-      );
-      fs.writeFileSync(detailedFile, JSON.stringify(allData, null, 2));
+    const exportFile = path.join(outputDir, 'firestore_export.json');
+    fs.writeFileSync(exportFile, JSON.stringify(importData));
 
-      clearInterval(savingInterval);
-      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
-      console.log(chalk.green(`📄 Detailed backup saved: ${detailedFile}`));
+    clearInterval(savingInterval);
+    process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
+    console.log(chalk.green(`📤 Export saved: ${exportFile}`));
 
-      // Restart saving indicator if we have more files to save
-      if (options.importable !== false) {
-        savingInterval = setInterval(() => {
-          const dots = '.'.repeat((savingDots % 3) + 1);
-          process.stdout.write(
-            `\r${chalk.gray(`   └── Writing files${dots}   `)}`
-          );
-          savingDots++;
-        }, 200);
-      }
-    }
-
-    // Save importable format
-    if (options.importable !== false) {
-      const importableFile = path.join(
-        outputDir,
-        `firestore_importable_${timestamp}.json`
-      );
-      fs.writeFileSync(importableFile, JSON.stringify(importData, null, 2));
-
-      clearInterval(savingInterval);
-      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
-      console.log(chalk.green(`📤 Importable backup saved: ${importableFile}`));
-    }
-
-    // Summary with detailed read counts
+    // Summary
+    const exportSize = (fs.statSync(exportFile).size / 1024 / 1024).toFixed(2);
     console.log(chalk.blue('\n📊 Export Summary:'));
     console.log(
-      chalk.gray(`   └── Collections processed: ${Object.keys(allData).length}`)
+      chalk.gray(
+        `   └── Collections processed: ${Object.keys(importData).length}`
+      )
     );
     console.log(chalk.gray(`   └── Documents read: ${totalDocsRead}`));
 
@@ -256,34 +185,7 @@ export async function exportCollections(options: ExportCommandOptionsType) {
       );
     }
 
-    // Calculate file sizes
-    if (options.detailed !== false) {
-      const detailedFile = path.join(
-        outputDir,
-        `firestore_detailed_${timestamp}.json`
-      );
-      const detailedSize = (
-        fs.statSync(detailedFile).size /
-        1024 /
-        1024
-      ).toFixed(2);
-      console.log(chalk.gray(`   └── Detailed file size: ${detailedSize} MB`));
-    }
-
-    if (options.importable !== false) {
-      const importableFile = path.join(
-        outputDir,
-        `firestore_importable_${timestamp}.json`
-      );
-      const importableSize = (
-        fs.statSync(importableFile).size /
-        1024 /
-        1024
-      ).toFixed(2);
-      console.log(
-        chalk.gray(`   └── Importable file size: ${importableSize} MB`)
-      );
-    }
+    console.log(chalk.gray(`   └── Export file size: ${exportSize} MB`));
 
     console.log(chalk.green('\n🎉 Export completed successfully!'));
   } catch (error) {
