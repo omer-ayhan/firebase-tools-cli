@@ -161,7 +161,7 @@ Use space-separated path segments to target subcollections. Odd segments = colle
 Use `--collection-group` (`-g`) to query all subcollections with a given name across the entire database:
 - `firestore:query orders --collection-group` - Query all `orders` subcollections
 - `firestore:query orders --collection-group --where "status,==,shipped" --limit 20`
-- **Requires a Firestore composite index** - follow the error link to create it in Firebase Console if needed.
+- **Filtered/ordered queries may require a Firestore composite index** - follow the error link to create it in Firebase Console if needed.
 
 ### RTDB Nested Paths
 Specify deep paths using either slash-separated or space-separated segments:

@@ -26,7 +26,7 @@ const firestoreQuery = program
   )
   .option(
     '-g, --collection-group',
-    'Query as a collection group - searches all subcollections with this name across the entire database (requires a Firestore index)'
+    'Query as a collection group - searches all subcollections with this name across the entire database (filtered/ordered queries may require a Firestore index)'
   )
   .option('--json', 'Output results as JSON')
   .option('--output <file>', 'Save JSON output to file')
@@ -68,7 +68,7 @@ Examples:
 
 Note: Query options (--where, --limit, --order-by) apply to collection queries and document array fields.
 Field queries (--field) only apply to document queries.
-Collection group queries (--collection-group) may require a Firestore composite index - follow
+Collection group queries (--collection-group) with filters or ordering may require a Firestore composite index - follow
 the link in the error message to create it in Firebase Console if needed.`
   )
   .action(async (collection, subcollections, options) => {

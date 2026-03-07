@@ -140,12 +140,7 @@ export async function queryCollection(
           )
         );
       }
-      await queryCollectionGroupData(
-        db,
-        collectionPath[0],
-        options,
-        collectionPathStr
-      );
+      await queryCollectionGroupData(db, collectionPath[0], options);
       return;
     }
 
@@ -786,30 +781,32 @@ async function queryCollectionData(
 async function queryCollectionGroupData(
   db: admin.firestore.Firestore,
   collectionId: string,
-  options: QueryCommandOptionsType,
-  collectionPathStr: string
+  options: QueryCommandOptionsType
 ) {
   console.log(
     chalk.cyan(
       `🌐 Collection group query: searching all "${collectionId}" subcollections across the database\n`
     )
   );
-  console.log(
-    chalk.gray(
-      '   ⚠️  Note: Collection group queries require a Firestore composite index.'
-    )
-  );
-  console.log(
-    chalk.gray(
-      '        If this query fails with an index error, follow the link in the error'
-    )
-  );
-  console.log(
-    chalk.gray(
-      '        message to create the required index in Firebase Console.\n'
-    )
-  );
 
+  // Only filtered/ordered collection group queries require a Firestore index
+  if (options.where || options.orderBy) {
+    console.log(
+      chalk.gray(
+        '   ⚠️  Note: Filtered/ordered collection group queries may require a Firestore composite index.'
+      )
+    );
+    console.log(
+      chalk.gray(
+        '        If this query fails with an index error, follow the link in the error'
+      )
+    );
+    console.log(
+      chalk.gray(
+        '        message to create the required index in Firebase Console.\n'
+      )
+    );
+  }
   let query: admin.firestore.Query<
     admin.firestore.DocumentData,
     admin.firestore.DocumentData
