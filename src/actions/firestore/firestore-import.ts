@@ -8,6 +8,41 @@ type ImportCommandOptionsType = {
   merge?: boolean;
 };
 
+/**
+ * Build a Firestore DocumentReference from a `__`-delimited path key and a
+ * document ID.
+ *
+ * The key encodes alternating collection / document segments:
+ *   col                          → top-level collection
+ *   col__docId__subCol           → one level deep
+ *   col__docId__subCol__subDocId__subSubCol  → two levels deep
+ *
+ * The provided `docId` is always the final document within the last collection
+ * encoded in the key.
+ */
+function buildDocRef(
+  db: admin.firestore.Firestore,
+  collectionKey: string,
+  docId: string
+): admin.firestore.DocumentReference {
+  const parts = collectionKey.split('__');
+  // A valid collection key must have an odd number of parts:
+  // [col], [col, docId, subCol], [col, docId, subCol, subDocId, subSubCol], …
+  if (parts.length % 2 === 0) {
+    throw new Error(
+      `Invalid collection key "${collectionKey}": expected an odd number of ` +
+        `segments (collection, docId, subcollection, …) but got ${parts.length}.`
+    );
+  }
+  // parts alternates: [col, doc, col, doc, col]
+  // parts[0] is the first collection; subsequent pairs are [doc, col]
+  let ref: admin.firestore.CollectionReference = db.collection(parts[0]);
+  for (let i = 1; i + 1 < parts.length; i += 2) {
+    ref = ref.doc(parts[i]).collection(parts[i + 1]);
+  }
+  return ref.doc(docId);
+}
+
 export async function importCollections(
   file: string,
   options: ImportCommandOptionsType
@@ -40,95 +75,51 @@ export async function importCollections(
 
       console.log(chalk.blue(`📝 Importing collection: ${collectionName}`));
 
-      // Handle subcollection naming convention
-      if (collectionName.includes('__')) {
+      const isNested = collectionName.includes('__');
+
+      if (isNested) {
         const parts = collectionName.split('__');
-        const parentCollection = parts[0];
-        const parentDoc = parts[1];
-        const subCollection = parts[2];
+        // Reconstruct the human-readable path for logging
+        const humanPath = parts
+          .map((seg, i) => (i % 2 === 0 ? seg : `[${seg}]`))
+          .join('/');
 
+        console.log(chalk.gray(`   └── Nested path: ${humanPath}`));
+      }
+
+      let batch = db.batch();
+      let batchCount = 0;
+
+      for (const [docId, docData] of Object.entries(documents as any)) {
+        const docRef = isNested
+          ? buildDocRef(db, collectionName, docId)
+          : db.collection(collectionName).doc(docId);
+
+        if (options.merge) {
+          batch.set(docRef, docData as any, { merge: true });
+        } else {
+          batch.set(docRef, docData as any);
+        }
+
+        batchCount++;
+
+        if (batchCount >= batchSize) {
+          await batch.commit();
+          totalImported += batchCount;
+          console.log(
+            chalk.gray(`   └── Batch imported: ${batchCount} documents`)
+          );
+          batch = db.batch();
+          batchCount = 0;
+        }
+      }
+
+      if (batchCount > 0) {
+        await batch.commit();
+        totalImported += batchCount;
         console.log(
-          chalk.gray(
-            `   └── Subcollection: ${parentCollection}/${parentDoc}/${subCollection}`
-          )
+          chalk.gray(`   └── Final batch: ${batchCount} documents`)
         );
-
-        let batch = db.batch(); // Create new batch
-        let batchCount = 0;
-
-        for (const [docId, docData] of Object.entries(documents as any)) {
-          const docRef = db
-            .collection(parentCollection)
-            .doc(parentDoc)
-            .collection(subCollection)
-            .doc(docId);
-
-          if (options.merge) {
-            batch.set(docRef, docData as any, { merge: true });
-          } else {
-            batch.set(docRef, docData as any);
-          }
-
-          batchCount++;
-
-          if (batchCount >= batchSize) {
-            await batch.commit();
-            totalImported += batchCount;
-            console.log(
-              chalk.gray(`       └── Batch imported: ${batchCount} documents`)
-            );
-
-            // Create a new batch for the next iteration
-            batch = db.batch();
-            batchCount = 0;
-          }
-        }
-
-        // Commit any remaining documents in the final batch
-        if (batchCount > 0) {
-          await batch.commit();
-          totalImported += batchCount;
-          console.log(
-            chalk.gray(`       └── Final batch: ${batchCount} documents`)
-          );
-        }
-      } else {
-        // Regular top-level collection
-        let batch = db.batch(); // Create new batch
-        let batchCount = 0;
-
-        for (const [docId, docData] of Object.entries(documents as any)) {
-          const docRef = db.collection(collectionName).doc(docId);
-
-          if (options.merge) {
-            batch.set(docRef, docData as any, { merge: true });
-          } else {
-            batch.set(docRef, docData as any);
-          }
-
-          batchCount++;
-
-          if (batchCount >= batchSize) {
-            await batch.commit();
-            totalImported += batchCount;
-            console.log(
-              chalk.gray(`   └── Batch imported: ${batchCount} documents`)
-            );
-
-            // Create a new batch for the next iteration
-            batch = db.batch();
-            batchCount = 0;
-          }
-        }
-
-        // Commit any remaining documents in the final batch
-        if (batchCount > 0) {
-          await batch.commit();
-          totalImported += batchCount;
-          console.log(
-            chalk.gray(`   └── Final batch: ${batchCount} documents`)
-          );
-        }
       }
 
       console.log(chalk.green(`   ✅ Collection ${collectionName} imported\n`));
@@ -146,3 +137,4 @@ export async function importCollections(
     throw error;
   }
 }
+

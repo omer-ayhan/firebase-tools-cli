@@ -10,6 +10,26 @@ type QueryRTDBOptionsType = {
   output?: string;
 };
 
+// Parse a CLI string value to its most appropriate JavaScript type.
+// Uses JSON.parse so that bare numbers/booleans/null are properly typed while
+// arbitrary strings (e.g. version strings like "1.0.0") remain strings.
+function parseFilterValue(value: string): any {
+  try {
+    const parsed = JSON.parse(value);
+    // Guard against precision loss for large integers
+    if (
+      typeof parsed === 'number' &&
+      Number.isInteger(parsed) &&
+      !Number.isSafeInteger(parsed)
+    ) {
+      return value;
+    }
+    return parsed;
+  } catch {
+    return value;
+  }
+}
+
 // Helper function to format values for display without truncation
 function formatValueForDisplay(value: any, indent: string = '   '): string {
   if (value === null) return 'null';
@@ -92,17 +112,7 @@ export async function queryRealtimeDatabase(
       }
       whereField = field;
       whereOperator = operator;
-
-      // Parse value to appropriate type
-      whereParsedValue = value;
-      if (value === 'true') whereParsedValue = true;
-      else if (value === 'false') whereParsedValue = false;
-      else if (value === 'null') whereParsedValue = null;
-      else if (!isNaN(Number(value)) && value.length <= 15) {
-        // Only convert to number if it's not too long to avoid precision loss
-        // JavaScript numbers lose precision for very large integers
-        whereParsedValue = Number(value);
-      }
+      whereParsedValue = parseFilterValue(value);
     }
 
     // Helper function to get nested field value

@@ -1,10 +1,12 @@
 import chalk from 'chalk';
 import * as admin from 'firebase-admin';
 import fs from 'fs';
+import inquirer from 'inquirer';
 
 type ImportRTDBOptionsType = {
   batchSize?: number;
   merge?: boolean;
+  replace?: boolean;
 };
 
 export async function importRealtimeDatabase(
@@ -21,6 +23,36 @@ export async function importRealtimeDatabase(
 
     const rtdbApp = admin.app('rtdb-app');
     const rtdb = rtdbApp.database();
+
+    // Prompt for confirmation when neither --merge nor --replace is specified
+    if (!options.merge && !options.replace) {
+      console.log(
+        chalk.yellow(
+          '⚠️  WARNING: This operation will OVERWRITE existing data in the Realtime Database.'
+        )
+      );
+      console.log(
+        chalk.yellow(
+          '   Use --merge to merge with existing data or --replace to skip this prompt.'
+        )
+      );
+      console.log(chalk.gray(`   Database: ${rtdbApp.options.databaseURL}`));
+      console.log();
+
+      const { confirmed } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmed',
+          message: 'Do you want to proceed and overwrite the existing data?',
+          default: false,
+        },
+      ]);
+
+      if (!confirmed) {
+        console.log(chalk.yellow('⚠️  Import cancelled by user.'));
+        process.exit(0);
+      }
+    }
 
     const rawData = fs.readFileSync(file, 'utf8');
     const importData = JSON.parse(rawData);

@@ -9,7 +9,11 @@ const rtdbImport = program
   .description('Import data to Realtime Database from JSON file')
   .argument('<file>', 'JSON file to import')
   .option('-b, --batch-size <size>', 'Batch size for imports', '500')
-  .option('-m, --merge', 'Merge documents instead of overwriting')
+  .option('-m, --merge', 'Merge data instead of overwriting')
+  .option(
+    '-r, --replace',
+    'Overwrite existing data without prompting for confirmation'
+  )
   .option('-d, --database-url <url>', 'Firebase Realtime Database URL')
   .hook('preAction', rtdbValidatePreAction)
   .action(async (file, options) => {

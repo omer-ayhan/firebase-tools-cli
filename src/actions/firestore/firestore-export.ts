@@ -3,8 +3,6 @@ import * as admin from 'firebase-admin';
 import fs from 'fs';
 import path from 'path';
 
-import { QueryDocumentSnapshotType } from '@/types';
-
 type ExportCommandOptionsType = {
   exclude?: string[];
   noSubcollections?: boolean;
@@ -13,11 +11,82 @@ type ExportCommandOptionsType = {
   output?: string;
 };
 
-type ImportData = {
-  [key: string]: {
-    [key: string]: any;
-  };
+type DetailedDocType = {
+  id: string;
+  data: any;
+  createTime: admin.firestore.Timestamp;
+  updateTime: admin.firestore.Timestamp;
+  subcollections?: { [key: string]: DetailedDocType[] };
 };
+
+type ImportData = {
+  [key: string]: { [key: string]: any };
+};
+
+/**
+ * Recursively export subcollections for a document.
+ * Populates `importData` with flat keys of the form
+ *   col__docId__subCol__subDocId__subSubCol…
+ * and returns the detailed subcollection tree for the detailed format.
+ */
+async function exportSubcollections(
+  docRef: admin.firestore.DocumentReference,
+  parentKey: string,
+  importData: ImportData,
+  noSubcollections: boolean
+): Promise<{ [key: string]: DetailedDocType[] }> {
+  if (noSubcollections) return {};
+
+  const subcollections = await docRef.listCollections();
+  if (subcollections.length === 0) return {};
+
+  const detailedSubcols: { [key: string]: DetailedDocType[] } = {};
+
+  await Promise.all(
+    subcollections.map(async (subcol) => {
+      const subColKey = `${parentKey}__${subcol.id}`;
+      const subSnapshot = await subcol.get();
+      importData[subColKey] = {};
+
+      const subDocs = await Promise.all(
+        subSnapshot.docs.map(async (subDoc) => {
+          importData[subColKey][subDoc.id] = subDoc.data();
+
+          // Recurse into deeper subcollections
+          const nestedSubs = await exportSubcollections(
+            subDoc.ref,
+            `${subColKey}__${subDoc.id}`,
+            importData,
+            false
+          );
+
+          const docEntry: DetailedDocType = {
+            id: subDoc.id,
+            data: subDoc.data(),
+            createTime: subDoc.createTime,
+            updateTime: subDoc.updateTime,
+          };
+
+          if (Object.keys(nestedSubs).length > 0) {
+            docEntry.subcollections = nestedSubs;
+          }
+
+          return docEntry;
+        })
+      );
+
+      console.log(
+        chalk.gray(
+          `           └── Subcollection ${subColKey}: ${subDocs.length} documents read`
+        )
+      );
+
+      detailedSubcols[subcol.id] = subDocs;
+    })
+  );
+
+  return detailedSubcols;
+}
 
 export async function exportCollections(options: ExportCommandOptionsType) {
   try {
@@ -29,165 +98,92 @@ export async function exportCollections(options: ExportCommandOptionsType) {
       chalk.cyan(`📁 Found ${collections.length} top-level collections\n`)
     );
 
-    const allData: {
-      [key: string]: {
-        id: string;
-        data: any;
-        createTime: admin.firestore.Timestamp;
-        updateTime: admin.firestore.Timestamp;
-        error?: string;
-        subcollections?: {
-          [key: string]: any[];
-        };
-      }[];
-    } = {};
+    const allData: { [key: string]: DetailedDocType[] } = {};
     const importData: ImportData = {};
     let totalDocsRead = 0;
     let totalSubDocsRead = 0;
 
-    for (const collection of collections) {
-      const collectionName = collection.id;
+    // Read all top-level collections concurrently
+    await Promise.all(
+      collections.map(async (collection) => {
+        const collectionName = collection.id;
 
-      // Skip collections if specified
-      if (options.exclude && options.exclude.includes(collectionName)) {
-        console.log(
-          chalk.yellow(`⏭️  Skipping excluded collection: ${collectionName}`)
-        );
-        continue;
-      }
-
-      console.log(chalk.blue(`📖 Reading collection: ${collectionName}`));
-
-      try {
-        const snapshot = await collection.get();
-        const documents = [];
-        let collectionDocsRead = 0;
-        let collectionSubDocsRead = 0;
-
-        console.log(chalk.gray(`   └── Documents found: ${snapshot.size}`));
-
-        // For importable format
-        importData[collectionName] = {};
-
-        // Create loading indicator
-        let loadingDots = 0;
-        let loadingInterval = setInterval(() => {
-          const dots = '.'.repeat((loadingDots % 3) + 1);
-          process.stdout.write(
-            `\r${chalk.gray(`       └── Processing${dots}   `)}`
+        if (options.exclude && options.exclude.includes(collectionName)) {
+          console.log(
+            chalk.yellow(`⏭️  Skipping excluded collection: ${collectionName}`)
           );
-          loadingDots++;
-        }, 300);
-
-        for (const doc of snapshot.docs) {
-          const docData: {
-            id: string;
-            data: any;
-            createTime: admin.firestore.Timestamp;
-            updateTime: admin.firestore.Timestamp;
-            subcollections?: {
-              [key: string]: any[];
-            };
-          } = {
-            id: doc.id,
-            data: doc.data(),
-            createTime: doc.createTime,
-            updateTime: doc.updateTime,
-          };
-
-          // Add to importable format
-          importData[collectionName][doc.id] = doc.data();
-          collectionDocsRead++;
-
-          // Handle subcollections if enabled
-          if (!options.noSubcollections) {
-            const subcollections = await doc.ref.listCollections();
-            if (subcollections.length > 0) {
-              docData.subcollections = {};
-
-              // Clear loading line and show subcollection info
-              clearInterval(loadingInterval);
-              process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
-              console.log(
-                chalk.gray(
-                  `       └── Document ${doc.id} has ${subcollections.length} subcollections`
-                )
-              );
-
-              for (const subcol of subcollections) {
-                const subSnapshot = await subcol.get();
-                const subDocs: any[] = [];
-
-                // For importable format
-                const subCollectionPath = `${collectionName}__${doc.id}__${subcol.id}`;
-                importData[subCollectionPath] = {};
-
-                subSnapshot.forEach((subDoc: QueryDocumentSnapshotType) => {
-                  const subDocData = {
-                    id: subDoc.id,
-                    data: subDoc.data(),
-                    createTime: subDoc.createTime,
-                    updateTime: subDoc.updateTime,
-                  };
-                  subDocs.push(subDocData);
-                  collectionSubDocsRead++;
-
-                  // Add to importable format
-                  importData[subCollectionPath][subDoc.id] = subDoc.data();
-                });
-
-                docData.subcollections[subcol.id] = subDocs;
-                console.log(
-                  chalk.gray(
-                    `           └── Subcollection ${subcol.id}: ${subDocs.length} documents read`
-                  )
-                );
-              }
-
-              // Restart loading indicator if there are more documents
-              if (collectionDocsRead < snapshot.size) {
-                loadingInterval = setInterval(() => {
-                  const dots = '.'.repeat((loadingDots % 3) + 1);
-                  process.stdout.write(
-                    `\r${chalk.gray(`       └── Processing${dots}   `)}`
-                  );
-                  loadingDots++;
-                }, 300);
-              }
-            }
-          }
-
-          documents.push(docData);
+          return;
         }
 
-        // Clear loading indicator
-        clearInterval(loadingInterval);
-        process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
+        console.log(chalk.blue(`📖 Reading collection: ${collectionName}`));
 
-        allData[collectionName] = documents;
-        totalDocsRead += collectionDocsRead;
-        totalSubDocsRead += collectionSubDocsRead;
+        try {
+          const snapshot = await collection.get();
+          console.log(
+            chalk.gray(`   └── Documents found: ${snapshot.size}`)
+          );
 
-        // Show final count for this collection
-        const subCollectionText =
-          collectionSubDocsRead > 0
-            ? chalk.gray(` + ${collectionSubDocsRead} subdocuments`)
-            : '';
+          importData[collectionName] = {};
+          let collectionSubDocsRead = 0;
 
-        console.log(
-          chalk.green(
-            `   ✅ Collection ${collectionName} exported: ${collectionDocsRead} documents${subCollectionText}\n`
-          )
-        );
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        console.error(
-          chalk.red(`   ❌ Error reading collection ${collectionName}:`),
-          errorMessage
-        );
-      }
-    }
+          // Read all documents in this collection concurrently
+          const documents = await Promise.all(
+            snapshot.docs.map(async (doc) => {
+              importData[collectionName][doc.id] = doc.data();
+
+              const docEntry: DetailedDocType = {
+                id: doc.id,
+                data: doc.data(),
+                createTime: doc.createTime,
+                updateTime: doc.updateTime,
+              };
+
+              if (!options.noSubcollections) {
+                const detailedSubs = await exportSubcollections(
+                  doc.ref,
+                  `${collectionName}__${doc.id}`,
+                  importData,
+                  false
+                );
+
+                if (Object.keys(detailedSubs).length > 0) {
+                  docEntry.subcollections = detailedSubs;
+                  // Count all nested sub-docs for summary
+                  collectionSubDocsRead += Object.values(detailedSubs).reduce(
+                    (acc, docs) => acc + docs.length,
+                    0
+                  );
+                }
+              }
+
+              return docEntry;
+            })
+          );
+
+          allData[collectionName] = documents;
+          totalDocsRead += snapshot.size;
+          totalSubDocsRead += collectionSubDocsRead;
+
+          const subCollectionText =
+            collectionSubDocsRead > 0
+              ? chalk.gray(` + ${collectionSubDocsRead} subdocuments`)
+              : '';
+
+          console.log(
+            chalk.green(
+              `   ✅ Collection ${collectionName} exported: ${snapshot.size} documents${subCollectionText}\n`
+            )
+          );
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          console.error(
+            chalk.red(`   ❌ Error reading collection ${collectionName}:`),
+            errorMessage
+          );
+        }
+      })
+    );
 
     // Generate file names
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -195,50 +191,46 @@ export async function exportCollections(options: ExportCommandOptionsType) {
 
     console.log(chalk.blue('💾 Saving export files...'));
 
-    // Create saving loading indicator
-    let savingDots = 0;
-    let savingInterval = setInterval(() => {
-      const dots = '.'.repeat((savingDots % 3) + 1);
-      process.stdout.write(`\r${chalk.gray(`   └── Writing files${dots}   `)}`);
-      savingDots++;
-    }, 200);
+    // Serialize both JSON strings concurrently, then write files
+    const [detailedJson, importableJson] = await Promise.all([
+      options.detailed !== false
+        ? Promise.resolve(JSON.stringify(allData, null, 2))
+        : Promise.resolve(null),
+      options.importable !== false
+        ? Promise.resolve(JSON.stringify(importData, null, 2))
+        : Promise.resolve(null),
+    ]);
 
-    // Save detailed format
-    if (options.detailed !== false) {
+    // Write files concurrently using async I/O
+    const writePromises: Promise<void>[] = [];
+
+    if (detailedJson !== null) {
       const detailedFile = path.join(
         outputDir,
         `firestore_detailed_${timestamp}.json`
       );
-      fs.writeFileSync(detailedFile, JSON.stringify(allData, null, 2));
-
-      clearInterval(savingInterval);
-      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
-      console.log(chalk.green(`📄 Detailed backup saved: ${detailedFile}`));
-
-      // Restart saving indicator if we have more files to save
-      if (options.importable !== false) {
-        savingInterval = setInterval(() => {
-          const dots = '.'.repeat((savingDots % 3) + 1);
-          process.stdout.write(
-            `\r${chalk.gray(`   └── Writing files${dots}   `)}`
-          );
-          savingDots++;
-        }, 200);
-      }
+      writePromises.push(
+        fs.promises.writeFile(detailedFile, detailedJson).then(() => {
+          console.log(chalk.green(`📄 Detailed backup saved: ${detailedFile}`));
+        })
+      );
     }
 
-    // Save importable format
-    if (options.importable !== false) {
+    if (importableJson !== null) {
       const importableFile = path.join(
         outputDir,
         `firestore_importable_${timestamp}.json`
       );
-      fs.writeFileSync(importableFile, JSON.stringify(importData, null, 2));
-
-      clearInterval(savingInterval);
-      process.stdout.write('\r' + ' '.repeat(50) + '\r'); // Clear the line
-      console.log(chalk.green(`📤 Importable backup saved: ${importableFile}`));
+      writePromises.push(
+        fs.promises.writeFile(importableFile, importableJson).then(() => {
+          console.log(
+            chalk.green(`📤 Importable backup saved: ${importableFile}`)
+          );
+        })
+      );
     }
+
+    await Promise.all(writePromises);
 
     // Summary with detailed read counts
     console.log(chalk.blue('\n📊 Export Summary:'));
@@ -256,7 +248,6 @@ export async function exportCollections(options: ExportCommandOptionsType) {
       );
     }
 
-    // Calculate file sizes
     if (options.detailed !== false) {
       const detailedFile = path.join(
         outputDir,

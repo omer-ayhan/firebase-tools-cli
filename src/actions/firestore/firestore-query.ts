@@ -16,6 +16,26 @@ type QueryDocumentSnapshotType = admin.firestore.QueryDocumentSnapshot<
   admin.firestore.DocumentData
 >;
 
+// Parse a CLI string value to its most appropriate JavaScript type.
+// Uses JSON.parse so that bare numbers/booleans/null are properly typed while
+// arbitrary strings (e.g. version strings like "1.0.0") remain strings.
+function parseFilterValue(value: string): any {
+  try {
+    const parsed = JSON.parse(value);
+    // Guard against precision loss for large integers
+    if (
+      typeof parsed === 'number' &&
+      Number.isInteger(parsed) &&
+      !Number.isSafeInteger(parsed)
+    ) {
+      return value;
+    }
+    return parsed;
+  } catch {
+    return value;
+  }
+}
+
 // Helper function to get nested field value using dot notation
 function getNestedFieldValue(obj: any, fieldPath: string): any {
   const keys = fieldPath.split('.');
@@ -217,16 +237,7 @@ async function queryDocument(
 
         const trimmedField = filterField.trim();
         const trimmedOperator = operator.trim();
-        let parsedValue: any = value.trim();
-
-        // Parse value to appropriate type (similar to collection queries)
-        if (parsedValue === 'true') parsedValue = true;
-        else if (parsedValue === 'false') parsedValue = false;
-        else if (parsedValue === 'null') parsedValue = null;
-        else if (!isNaN(Number(parsedValue)) && parsedValue.length <= 15) {
-          // Only convert to number if it's not too long to avoid precision loss
-          parsedValue = Number(parsedValue);
-        }
+        const parsedValue: any = parseFilterValue(value.trim());
 
         filteredArray = filteredArray.filter((item) => {
           if (typeof item !== 'object' || item === null) {
@@ -599,12 +610,7 @@ async function queryCollectionData(
     const [field, operator, value] = options.where.split(',');
     const operatorType = operator.trim() as admin.firestore.WhereFilterOp;
 
-    // Parse value to appropriate type
-    let parsedValue: any = value.trim();
-    if (parsedValue === 'true') parsedValue = true;
-    else if (parsedValue === 'false') parsedValue = false;
-    else if (parsedValue === 'null') parsedValue = null;
-    else if (!isNaN(Number(parsedValue))) parsedValue = Number(parsedValue);
+    const parsedValue: any = parseFilterValue(value.trim());
 
     query = query.where(field.trim(), operatorType, parsedValue);
     console.log(
