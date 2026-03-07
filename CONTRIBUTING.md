@@ -53,31 +53,81 @@ Thank you for your interest in contributing to Firebase Tools CLI! This guide wi
 
 ### Before You Submit
 
-1. **Test your changes** thoroughly
-2. **Run the linter** to check for code style issues
-3. **Make sure all tests pass**
-4. **Update documentation** if necessary
+1. **Run all checks** to ensure everything passes:
+
+   ```bash
+   npm ci
+   npx tsc --noEmit
+   npx prettier --check "src/**/*.{ts,js,json}"
+   npm run build
+   npm pack && npm install -g firebase-tools-cli-*.tgz && firebase-tools-cli --help
+   ```
+
+2. **Update documentation** if your changes affect user-facing functionality.
+
+### Commit Message Convention
+
+All commit messages **must** follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). This is enforced by the **Commitlint** CI workflow — non-conforming commits will fail the check.
+
+**Format:** `type(scope)!: subject`
+
+| Field | Details |
+|-------|---------|
+| `type` | `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert` |
+| `scope` | Optional: `cli`, `firestore`, `rtdb`, `remote-config`, `auth`, `config`, `release`, `docs`, `deps` |
+| `!` | Optional: marks a breaking change |
+| `subject` | 1–72 characters, imperative mood, no trailing period |
+
+**Examples:**
+
+```
+feat(cli): add --dry-run flag to firestore export
+fix(rtdb): handle missing databaseURL gracefully
+docs: update README with new auth commands
+chore: bump version to 0.6.0
+```
+
+### PR Title Convention
+
+PR titles **must** follow the same Conventional Commits format as commit messages. This is enforced by the **Conventional PR Title** CI workflow.
+
+```
+type(scope)!: subject
+```
+
+**Common failure messages:**
+
+- `❌ PR title does not follow Conventional Commits format.` — Fix: rename your PR title to match the format above.
+- `✖ subject may not be empty` (commitlint) — Fix: ensure your commit message has a subject after the colon.
+- `✖ type must be one of [feat, fix, ...]` (commitlint) — Fix: use an allowed type.
+
+### Branch Naming Conventions
+
+Follow the pattern `type/short-description`:
+
+```
+feat/add-auth-login
+fix/rtdb-timeout
+docs/update-contributing
+chore/bump-dependencies
+```
 
 ### Creating a Pull Request
 
-1. **Conventional commits** for your commit messages. For details, see [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
-
-2. **Conventional branch names** for your branch names. For details, see [Conventional Branches](https://conventional-branch.github.io/). For example, `feat/add-new-feature` or `bugfix/fix-123`.
-
-3. **Push your branch** to your fork:
+1. **Push your branch** to your fork:
 
    ```bash
-   git push origin feature/your-feature-name
+   git push origin feat/your-feature-name
    ```
 
-4. **Create a pull request** on GitHub:
+2. **Create a pull request** on GitHub:
 
    - Go to the main repository
    - Click "New Pull Request"
    - Select your branch
    - Fill out the pull request template
 
-5. **Write a clear description** that includes:
+3. **Write a clear description** that includes:
    - What changes you made
    - Why you made them
    - Any relevant issue numbers (e.g., "Fixes #123")
@@ -85,7 +135,8 @@ Thank you for your interest in contributing to Firebase Tools CLI! This guide wi
 ### Pull Request Guidelines
 
 - **One feature per PR**: Keep pull requests focused on a single feature or fix
-- **Clear title**: Use a descriptive title that explains what the PR does
+- **Conventional title**: PR title must follow the Conventional Commits format — enforced by CI
+- **Conventional commits**: All commits must follow Conventional Commits — enforced by CI
 - **Detailed description**: Explain the changes and why they're needed
 - **Link issues**: Reference any related issues in your description. Non-issue PRs will not be merged.
 
