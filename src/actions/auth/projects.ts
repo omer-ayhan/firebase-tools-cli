@@ -4,6 +4,7 @@ import fs from 'fs';
 import { Credentials, OAuth2Client } from 'google-auth-library';
 import path from 'path';
 
+import { CREDENTIALS_FILE } from '@/constants';
 import { loadConfig, saveConfig } from '@/utils';
 
 type ProjectType = {
@@ -213,6 +214,59 @@ const listProjectsAction = async (
         console.log(chalk.yellow('💡 Try: firebase-tools-cli login'));
         return;
       }
+    }
+
+    // Check for saved OAuth credentials
+    if (config.authMethod === 'oauth' && fs.existsSync(CREDENTIALS_FILE)) {
+      let savedCredentials: Credentials;
+      try {
+        savedCredentials = JSON.parse(
+          fs.readFileSync(CREDENTIALS_FILE, 'utf8')
+        );
+      } catch {
+        console.error(chalk.red('❌ Saved OAuth credentials are corrupted'));
+        console.log(chalk.yellow('💡 Try: firebase-tools-cli login --force'));
+        return;
+      }
+
+      console.log(chalk.blue('🔐 Using saved OAuth authentication'));
+
+      const projects = await listUserProjects(savedCredentials);
+
+      if (projects.length > 0) {
+        console.log(chalk.cyan('\nYour Firebase Projects:\n'));
+        projects.forEach((project) => {
+          const isDefault = project.projectId === config.defaultProject;
+          const marker = isDefault ? chalk.green(' ✓ (default)') : '';
+          console.log(
+            chalk.white(`📁 ${project.name || project.projectId}`) + marker
+          );
+          console.log(chalk.gray(`   └── ID: ${project.projectId}`));
+          console.log(chalk.gray(`   └── Type: OAuth`));
+          console.log();
+        });
+      } else {
+        if (config.defaultProject) {
+          console.log(chalk.cyan('Default Project:\n'));
+          console.log(chalk.white(`📁 ${config.defaultProject}`));
+          console.log(chalk.gray(`   └── ID: ${config.defaultProject}`));
+          console.log(chalk.gray(`   └── Type: OAuth`));
+          console.log(chalk.green(`   └── Status: ✓ (default)`));
+        } else {
+          console.log(chalk.yellow('⚠️  No projects found for your account'));
+        }
+      }
+
+      console.log();
+      console.log(chalk.blue('💡 Commands:'));
+      console.log(
+        chalk.gray('   • firebase-tools-cli projects --set-default <projectId>')
+      );
+      console.log(
+        chalk.gray('   • firebase-tools-cli projects --clear-default')
+      );
+      console.log(chalk.gray('   • firebase-tools-cli reset --config-only'));
+      return;
     }
 
     console.log(chalk.yellow('🔐 No authentication found'));

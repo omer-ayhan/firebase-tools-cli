@@ -6,8 +6,9 @@ import inquirer from 'inquirer';
 import { CONFIG_DIR, CONFIG_FILE, CREDENTIALS_FILE } from './constants';
 
 type ConfigType = {
-  authMethod: string;
+  authMethod?: 'oauth' | 'service-account';
   serviceAccountPath?: string;
+  defaultProject?: string;
 };
 
 function countNodes(data: any, count: number = 0): number {

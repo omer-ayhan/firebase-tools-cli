@@ -246,12 +246,9 @@ async function promptAuthenticationMethod() {
       message: 'Choose authentication method:',
       choices: [
         {
-          name: chalk.dim(
-            '🔐 OAuth (Google Account) - Interactive browser authentication'
-          ),
+          name: '🔐 OAuth (Google Account) - Interactive browser authentication',
           value: 'oauth',
           short: 'OAuth',
-          disabled: chalk.dim('Work in Progress'),
         },
         {
           name: '🔑 Service Account - JSON key file authentication',
@@ -338,22 +335,20 @@ const loginAction = async (options: LoginActionType) => {
     const config = loadConfig();
     let isReauthenticate = false;
 
-    if (options.method == 'oauth') {
-      console.log(
-        chalk.gray(
-          '🔐 oauth is not implemented yet. We are working on it. Please use service-account instead.\n'
-        )
-      );
-      return;
-    }
+    // Check if already authenticated (service account or OAuth)
+    const hasServiceAccount =
+      config.serviceAccountPath && fs.existsSync(config.serviceAccountPath);
+    const hasOAuth =
+      config.authMethod === 'oauth' && fs.existsSync(CREDENTIALS_FILE);
 
-    // Check if already authenticated with service account
-    if (
-      config.serviceAccountPath &&
-      fs.existsSync(config.serviceAccountPath) &&
-      !options.force
-    ) {
-      console.log(chalk.green('✅ Already authenticated with service account'));
+    if ((hasServiceAccount || hasOAuth) && !options.force) {
+      if (hasServiceAccount) {
+        console.log(
+          chalk.green('✅ Already authenticated with service account')
+        );
+      } else {
+        console.log(chalk.green('✅ Already authenticated with OAuth'));
+      }
 
       if (config.defaultProject) {
         console.log(
@@ -380,35 +375,110 @@ const loginAction = async (options: LoginActionType) => {
 
     console.log(chalk.blue('🔐 Starting authentication process...\n'));
 
-    // Only support service account authentication
-    console.log(chalk.blue('🔑 Service Account Authentication\n'));
-    const serviceAccountPath = await promptServiceAccountFile();
+    // Determine auth method: use CLI flag or prompt the user
+    let authMethod: LoginMethod;
+    if (options.method) {
+      authMethod = options.method;
+    } else {
+      authMethod = await promptAuthenticationMethod();
+    }
 
-    const serviceAccount = JSON.parse(
-      fs.readFileSync(path.resolve(serviceAccountPath), 'utf8')
-    );
-    console.log(chalk.green('✅ Service account loaded successfully!'));
-    console.log(chalk.gray(`   └── Project: ${serviceAccount.project_id}`));
+    if (authMethod === 'oauth') {
+      const credentials = await authenticateWithOAuth();
 
-    // Save service account info to config for future use
-    const newConfig = {
-      ...config,
-      serviceAccountPath: path.resolve(serviceAccountPath),
-      defaultProject: serviceAccount.project_id,
-    };
+      console.log(chalk.green('\n✅ OAuth authentication successful!'));
+      console.log(chalk.gray('   └── Access token received'));
 
-    saveConfig(newConfig);
-    console.log(chalk.green(`✅ Service account saved for future use`));
-    console.log(
-      chalk.green(`✅ Default project set to: ${serviceAccount.project_id}`)
-    );
+      // Try to fetch available Firebase projects and let the user pick one
+      let defaultProject: string | undefined;
+      try {
+        const { listUserProjects } = await import('@/actions/auth/projects');
+        const projects = await listUserProjects(credentials);
 
-    console.log(
-      chalk.green('\n🎉 Setup complete! You can now use all commands.')
-    );
-    console.log(
-      chalk.gray('💡 No need to specify --service-account flag anymore')
-    );
+        if (projects.length > 0) {
+          const projectChoices = projects.map((p) => ({
+            name: `${p.name} (${p.projectId})`,
+            value: p.projectId,
+            short: p.projectId,
+          }));
+
+          const { selectedProject } = await inquirer.prompt([
+            {
+              type: 'list',
+              name: 'selectedProject',
+              message: 'Select a default Firebase project:',
+              choices: projectChoices,
+            },
+          ]);
+
+          defaultProject = selectedProject;
+        } else {
+          console.log(
+            chalk.yellow(
+              '⚠️  No Firebase projects found for your account. You can set one later with: firebase-tools-cli projects --set-default <projectId>'
+            )
+          );
+        }
+      } catch (projectError) {
+        console.log(
+          chalk.yellow(
+            '⚠️  Could not fetch projects automatically. You can set a default project later with: firebase-tools-cli projects --set-default <projectId>'
+          )
+        );
+      }
+
+      // Save OAuth credentials and remove service account from config
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { serviceAccountPath: _removed, ...restConfig } = config;
+      const newConfig = {
+        ...restConfig,
+        authMethod: 'oauth' as const,
+        ...(defaultProject ? { defaultProject } : {}),
+      };
+
+      saveConfig(newConfig);
+
+      console.log(chalk.green('\n✅ OAuth credentials saved for future use'));
+      if (defaultProject) {
+        console.log(
+          chalk.green(`✅ Default project set to: ${defaultProject}`)
+        );
+      }
+      console.log(
+        chalk.green('\n🎉 Setup complete! You can now use all commands.')
+      );
+    } else {
+      // Service account authentication
+      console.log(chalk.blue('🔑 Service Account Authentication\n'));
+      const serviceAccountPath = await promptServiceAccountFile();
+
+      const serviceAccount = JSON.parse(
+        fs.readFileSync(path.resolve(serviceAccountPath), 'utf8')
+      );
+      console.log(chalk.green('✅ Service account loaded successfully!'));
+      console.log(chalk.gray(`   └── Project: ${serviceAccount.project_id}`));
+
+      // Save service account info to config for future use
+      const newConfig = {
+        ...config,
+        authMethod: 'service-account' as const,
+        serviceAccountPath: path.resolve(serviceAccountPath),
+        defaultProject: serviceAccount.project_id,
+      };
+
+      saveConfig(newConfig);
+      console.log(chalk.green(`✅ Service account saved for future use`));
+      console.log(
+        chalk.green(`✅ Default project set to: ${serviceAccount.project_id}`)
+      );
+
+      console.log(
+        chalk.green('\n🎉 Setup complete! You can now use all commands.')
+      );
+      console.log(
+        chalk.gray('💡 No need to specify --service-account flag anymore')
+      );
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
