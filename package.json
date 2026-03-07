@@ -22,6 +22,7 @@
     "format": "prettier --write \"src/**/*.{ts,js,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
     "release": "chmod +x ./scripts/release.sh && ./scripts/release.sh",
+    "check:types": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "prepare": "npm run clean && npm run build",
     "postinstall": "npm shrinkwrap && test -f dist/index.js && chmod +x dist/index.js || true"
