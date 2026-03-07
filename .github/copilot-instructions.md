@@ -119,6 +119,18 @@ All steps must exit with code 0 before the PR is opened.
 
 ---
 
+## Base Branch Rule (MANDATORY)
+
+When opening a pull request, always set the base branch as follows:
+
+- **Default:** `base = development` — use this for all regular work (features, fixes, docs, ci, chore, etc.)
+- **Parent branch:** if the work is a follow-up to an existing branch/PR, use that branch as the base (not `development` and not `main`)
+- **`main`:** only use `base = main` if explicitly instructed by a maintainer (e.g., hotfix release)
+
+> Never default to `main` unless a maintainer explicitly requests it.
+
+---
+
 ## PR Checklist
 
 Include this checklist in every PR description:
