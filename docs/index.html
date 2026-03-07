@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Firebase Tools CLI - Command-line interface for managing Firebase services"
+    />
+    <title>Firebase Tools CLI</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          'Helvetica Neue', Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 60px 40px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 3em;
+        margin-bottom: 20px;
+        color: #667eea;
+      }
+
+      .subtitle {
+        font-size: 1.3em;
+        color: #666;
+        margin-bottom: 40px;
+      }
+
+      .description {
+        font-size: 1.1em;
+        color: #555;
+        margin-bottom: 40px;
+        line-height: 1.8;
+      }
+
+      .features {
+        text-align: left;
+        margin: 40px 0;
+        padding: 0 20px;
+      }
+
+      .features ul {
+        list-style: none;
+      }
+
+      .features li {
+        padding: 10px 0;
+        padding-left: 30px;
+        position: relative;
+      }
+
+      .features li:before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        color: #667eea;
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+
+      .cta-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 40px 0;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 15px 30px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1em;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+
+      .btn-secondary {
+        background: #f0f0f0;
+        color: #333;
+      }
+
+      .install-code {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 20px;
+        margin: 30px 0;
+        font-family: 'Courier New', monospace;
+        text-align: left;
+      }
+
+      .install-code code {
+        color: #667eea;
+        font-size: 1.1em;
+      }
+
+      .links {
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 1px solid #eee;
+      }
+
+      .links a {
+        color: #667eea;
+        text-decoration: none;
+        margin: 0 15px;
+        font-size: 1em;
+      }
+
+      .links a:hover {
+        text-decoration: underline;
+      }
+
+      footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        color: #999;
+        font-size: 0.9em;
+      }
+
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 2em;
+        }
+
+        .container {
+          padding: 40px 20px;
+        }
+
+        .cta-buttons {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔥 Firebase Tools CLI</h1>
+      <p class="subtitle">
+        Command-line interface for managing Firebase services
+      </p>
+
+      <p class="description">
+        A powerful CLI tool for managing Firebase Firestore, Realtime Database,
+        and Remote Config. Export, import, query, and manage your Firebase data
+        with ease from the command line.
+      </p>
+
+      <div class="features">
+        <ul>
+          <li>Export/Import data from Firestore and Realtime Database</li>
+          <li>Query collections and documents with advanced filtering</li>
+          <li>Convert JSON files to Firebase Remote Config format</li>
+          <li>Manage authentication and project settings</li>
+          <li>Batch operations with customizable batch sizes</li>
+        </ul>
+      </div>
+
+      <div class="install-code">
+        <strong>Installation:</strong><br />
+        <code>$ npm install -g firebase-tools-cli</code>
+      </div>
+
+      <div class="cta-buttons">
+        <a
+          href="https://github.com/omer-ayhan/firebase-tools-cli"
+          class="btn btn-primary"
+        >
+          View on GitHub
+        </a>
+        <a
+          href="https://www.npmjs.com/package/firebase-tools-cli"
+          class="btn btn-secondary"
+        >
+          View on NPM
+        </a>
+      </div>
+
+      <div class="links">
+        <a href="https://github.com/omer-ayhan/firebase-tools-cli#readme"
+          >Documentation</a
+        >
+        <a
+          href="https://github.com/omer-ayhan/firebase-tools-cli/blob/main/docs/PRIVACY.md"
+          >Privacy Policy</a
+        >
+        <a
+          href="https://github.com/omer-ayhan/firebase-tools-cli/blob/main/docs/TERMS.md"
+          >Terms of Service</a
+        >
+        <a href="https://github.com/omer-ayhan/firebase-tools-cli/issues"
+          >Report Issue</a
+        >
+      </div>
+
+      <footer>
+        <p>Open source project licensed under MIT License</p>
+        <p>Not officially affiliated with Google or Firebase</p>
+      </footer>
+    </div>
+  </body>
+</html>
