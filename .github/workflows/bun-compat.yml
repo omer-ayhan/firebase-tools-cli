@@ -1,0 +1,39 @@
+name: Bun Compatibility
+
+on:
+  push:
+    branches: [development]
+  pull_request:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+jobs:
+  bun-compat:
+    name: Verify Bun compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies with Bun
+        run: bun install
+
+      - name: TypeScript compilation check
+        run: bunx tsc --noEmit
+
+      - name: Build project with Bun
+        run: bun esbuild.config.js && chmod +x dist/index.js
+
+      - name: Test CLI help (Bun)
+        run: bun run dist/index.js --help
+
+      - name: All Bun checks passed
+        run: echo "✅ Bun compatibility checks passed successfully!"

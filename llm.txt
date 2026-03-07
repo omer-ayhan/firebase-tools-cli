@@ -271,6 +271,7 @@ firebase-tools-cli <command>
 - Use service account for production workflows
 
 ## Version Information
-- Node.js: >=14.0.0 required
+- Node.js: >=18.0.0 required (or Bun >=1.0.0)
+- Bun: >=1.0.0 supported as an alternative runtime
 - Firebase Admin SDK: v12.0.0+
 - Supports all current Firestore features and regions 

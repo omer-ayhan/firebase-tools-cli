@@ -4,6 +4,7 @@
 [![License][license-image]][license-url]
 [![Node Version][node-badge]][npm]
 [![NPM version][npm-badge]][npm]
+[![Bun compatible][bun-badge]][bun-url]
 
 The Firebase Tools CLI is a command-line interface for managing Firebase services including Firestore, Realtime Database, and Remote Config. It provides powerful tools to export, import, query, and manage your Firebase data from the command line.
 
@@ -28,6 +29,22 @@ npm install -g firebase-tools-cli
 ```
 
 This will provide you with the globally accessible `firebase-tools-cli` command.
+
+### Bun
+
+Firebase Tools CLI also supports [Bun](https://bun.sh/) (>=1.0.0) as a runtime. You can install it globally using Bun's package manager:
+
+```bash
+bun install -g firebase-tools-cli
+```
+
+Or run commands directly with Bun after a local install:
+
+```bash
+bun run firebase-tools-cli --help
+```
+
+> **Note:** Core features are expected to be compatible with Bun. Some interactive prompts that rely on Node.js-specific stdin handling may behave slightly differently under Bun. If you encounter issues, please [open an issue](https://github.com/omer-ayhan/firebase-tools-cli/issues).
 
 ## Commands
 
@@ -130,7 +147,7 @@ firebase-tools-cli remote-config:convert config.json --version-number 2 --user-e
 
 ## Requirements
 
-- Node.js >= 18.0.0
+- Node.js >= 18.0.0 **or** Bun >= 1.0.0
 - Valid Firebase project with appropriate permissions
 - Service account key
 
@@ -161,3 +178,5 @@ Firebase Tools CLI is licensed under the [MIT License](LICENSE.txt).
 [node-badge]: https://img.shields.io/node/v/firebase-tools-cli.svg
 [npm]: https://www.npmjs.com/package/firebase-tools-cli
 [npm-badge]: https://img.shields.io/npm/v/firebase-tools-cli.svg
+[bun-badge]: https://img.shields.io/badge/bun-%3E%3D1.0.0-black?logo=bun
+[bun-url]: https://bun.sh
