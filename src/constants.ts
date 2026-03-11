@@ -14,8 +14,8 @@ export const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 export const CREDENTIALS_FILE = path.join(CONFIG_DIR, 'credentials.json');
 
 export const OAUTH_CONFIG = {
-  clientId: 'work-in-progress',
-  clientSecret: 'work-in-progress',
+  clientId: process.env.FIREBASE_OAUTH_CLIENT_ID || '',
+  clientSecret: process.env.FIREBASE_OAUTH_CLIENT_SECRET || '',
   redirectUri: 'http://localhost:8080/oauth2callback',
   scopes: [
     'https://www.googleapis.com/auth/firebase',

@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const esbuild = require('esbuild');
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -32,6 +35,14 @@ esbuild
     target: 'node14',
     banner: {
       js: '#!/usr/bin/env node',
+    },
+    define: {
+      'process.env.FIREBASE_OAUTH_CLIENT_ID': JSON.stringify(
+        process.env.FIREBASE_OAUTH_CLIENT_ID || ''
+      ),
+      'process.env.FIREBASE_OAUTH_CLIENT_SECRET': JSON.stringify(
+        process.env.FIREBASE_OAUTH_CLIENT_SECRET || ''
+      ),
     },
 
     ...(isDev && { metafile: true }),

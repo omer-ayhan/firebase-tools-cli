@@ -29,6 +29,7 @@
         "@types/express": "^4.17.21",
         "@types/inquirer": "^8.2.10",
         "@types/node": "^20.11.0",
+        "dotenv": "^17.3.1",
         "prettier": "^2.8.8",
         "typescript": "^5.8.3"
       },
@@ -2223,6 +2224,19 @@
       },
       "engines": {
         "node": ">=8"
+      }
+    },
+    "node_modules/dotenv": {
+      "version": "17.3.1",
+      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-17.3.1.tgz",
+      "integrity": "sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==",
+      "dev": true,
+      "license": "BSD-2-Clause",
+      "engines": {
+        "node": ">=12"
+      },
+      "funding": {
+        "url": "https://dotenvx.com"
       }
     },
     "node_modules/dunder-proto": {
